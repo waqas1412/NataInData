@@ -13,12 +13,9 @@ interface AuthState {
 }
 
 const getRedirectUrl = () => {
-  // Check if we're in production
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://nata-in-data.vercel.app/new-chat'
-  }
-  // Development environment
-  return `${window.location.origin}/new-chat`
+  // Try to get URL from environment variables
+  const redirectUrl = process.env.NEXT_PUBLIC_REDIRECT_URL || window.location.origin
+  return `${redirectUrl}/new-chat`
 }
 
 export const useAuthStore = create<AuthState>()(
