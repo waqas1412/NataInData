@@ -37,7 +37,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
     if (window.innerWidth > 992) {
       setShowSidebar(true);
     }
-  }, []);
+  }, [setShowSidebar]);
 
   return (
     <div

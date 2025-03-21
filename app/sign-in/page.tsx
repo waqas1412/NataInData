@@ -6,7 +6,6 @@ import fav from "@/public/images/favicon.png";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Footer from "@/components/Footer";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { AuthError } from "@supabase/supabase-js";
 
@@ -15,7 +14,6 @@ function SignIn() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const { signIn } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
