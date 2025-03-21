@@ -21,10 +21,14 @@ export const useAuthStore = create<AuthState>()(
       signIn: async (email: string, password: string, provider?: string) => {
         try {
           if (provider === 'google') {
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { error } = await supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
                 redirectTo: `${window.location.origin}/new-chat`,
+                queryParams: {
+                  access_type: 'offline',
+                  prompt: 'consent',
+                },
               },
             })
             if (error) throw error
@@ -45,10 +49,14 @@ export const useAuthStore = create<AuthState>()(
       signUp: async (email: string, password: string, provider?: string) => {
         try {
           if (provider === 'google') {
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const { error } = await supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
                 redirectTo: `${window.location.origin}/new-chat`,
+                queryParams: {
+                  access_type: 'offline',
+                  prompt: 'consent',
+                },
               },
             })
             if (error) throw error
