@@ -6,14 +6,16 @@ type FormInputTypes = {
   type?: HTMLInputTypeAttribute;
   value?: string | number;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
 };
 
 function FormInput({
   title,
   placeholder,
   type = "text",
-  value,
+  value = "",
   onChange,
+  required = false,
 }: FormInputTypes) {
   return (
     <div className="">
@@ -24,7 +26,8 @@ function FormInput({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="bg-transparent outline-none placeholder:text-n400 text-sm dark:placeholder:text-lightN400 w-full "
+          required={required}
+          className="bg-transparent outline-none placeholder:text-n400 text-sm dark:placeholder:text-lightN400 w-full"
         />
       </div>
     </div>
