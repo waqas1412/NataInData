@@ -6,8 +6,8 @@ import { User } from '@supabase/supabase-js'
 interface AuthState {
   user: User | null
   isLoading: boolean
-  signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string) => Promise<void>
+  signIn: (email: string, password: string, provider?: string) => Promise<void>
+  signUp: (email: string, password: string, provider?: string) => Promise<void>
   signOut: () => Promise<void>
   setUser: (user: User | null) => void
 }
@@ -18,8 +18,19 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: true,
       setUser: (user) => set({ user }),
-      signIn: async (email: string, password: string) => {
+      signIn: async (email: string, password: string, provider?: string) => {
         try {
+          if (provider === 'google') {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: `${window.location.origin}/new-chat`,
+              },
+            })
+            if (error) throw error
+            return
+          }
+
           const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -31,8 +42,19 @@ export const useAuthStore = create<AuthState>()(
           throw error
         }
       },
-      signUp: async (email: string, password: string) => {
+      signUp: async (email: string, password: string, provider?: string) => {
         try {
+          if (provider === 'google') {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: `${window.location.origin}/new-chat`,
+              },
+            })
+            if (error) throw error
+            return
+          }
+
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -42,8 +64,7 @@ export const useAuthStore = create<AuthState>()(
           })
           if (error) throw error
           set({ user: data.user })
-          sessionStorage.setItem('fromSignUp', 'true')
-          window.location.href = '/confirm-email'
+          window.location.href = '/sign-in'
         } catch (error) {
           throw error
         }
@@ -53,7 +74,6 @@ export const useAuthStore = create<AuthState>()(
           const { error } = await supabase.auth.signOut()
           if (error) throw error
           set({ user: null })
-          sessionStorage.removeItem('fromSignUp')
           window.location.href = '/sign-in'
         } catch (error) {
           throw error
