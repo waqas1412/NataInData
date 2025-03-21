@@ -13,10 +13,22 @@ import {
 import userImg from "@/public/images/user.png";
 import useModalOpen from "@/hooks/useModalOpen";
 import { useMainModal } from "@/stores/modal";
+import { useAuthStore } from "@/stores/authStore";
 
 function UserModal() {
   const { modalOpen } = useMainModal();
   const { modal, setModal, modalRef } = useModalOpen();
+  const { signOut } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setModal(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
     <div className="relative size-9" ref={modalRef}>
       <button onClick={() => setModal((prev) => !prev)}>
@@ -83,14 +95,13 @@ function UserModal() {
             </Link>
           </li>
           <li className="w-full">
-            <Link
-              href={"/sign-in"}
-              onClick={() => setModal(false)}
+            <button
+              onClick={handleLogout}
               className="flex justify-start items-center gap-2 p-3 rounded-lg border border-transparent hover:border-errorColor/30  hover:bg-errorColor/5 duration-300 cursor-pointer w-full text-errorColor"
             >
               <PiSignOut className="text-xl" />
               <span className="">Log Out</span>
-            </Link>
+            </button>
           </li>
         </ul>
       </div>
