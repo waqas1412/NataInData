@@ -56,7 +56,7 @@ export default function EditBotModal() {
         />
         <TextArea
           className="col-span-12"
-          placeholder="Turn this script into a video for me, Make a video to teach me about Newton's Laws of Motion, Create a video about pairing snacks for movie nights, Please transform this script into a video"
+          placeholder="Turn this script into a video for me, Make a video to teach me about Newton&apos;s Laws of Motion, Create a video about pairing snacks for movie nights, Please transform this script into a video"
           title="Conversation Starters"
         />
       </div>
