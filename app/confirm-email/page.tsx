@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/lib/supabase";
+import { AuthError } from "@supabase/supabase-js";
 
 function ConfirmEmail() {
   const { user } = useAuthStore();
@@ -46,8 +47,9 @@ function ConfirmEmail() {
 
       if (error) throw error;
       setResendSuccess(true);
-    } catch (error: any) {
-      setResendError(error.message || "Failed to resend confirmation email");
+    } catch (error) {
+      const authError = error as AuthError;
+      setResendError(authError.message || "Failed to resend confirmation email");
     } finally {
       setIsResending(false);
     }
@@ -71,7 +73,7 @@ function ConfirmEmail() {
         <div className="w-full pt-4">
           <p className="text-2xl font-semibold">Check Your Email</p>
           <p className="text-sm pt-4">
-            We've sent a confirmation link to your email address. Please check your inbox and click the link to verify your account.
+            We&apos;ve sent a confirmation link to your email address. Please check your inbox and click the link to verify your account.
           </p>
 
           <div className="pt-10">
@@ -83,7 +85,7 @@ function ConfirmEmail() {
 
             <div className="pt-6 text-center">
               <p className="text-sm text-n500 dark:text-n30">
-                Didn't receive the email?{" "}
+                Didn&apos;t receive the email?{" "}
                 <button
                   onClick={handleResend}
                   disabled={isResending}

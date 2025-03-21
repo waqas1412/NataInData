@@ -1,44 +1,44 @@
 "use client";
-import React, { FormEvent, useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import displayImg from "@/public/images/sign-in-page-img.png";
 import Image from "next/image";
 import fav from "@/public/images/favicon.png";
-import FormInput from "@/components/ui/FormInput";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Footer from "@/components/Footer";
-import { PiFacebookLogo, PiGoogleLogo, PiInstagramLogo } from "react-icons/pi";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
+import { AuthError } from "@supabase/supabase-js";
 
 function SignIn() {
-  const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const { signIn } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
+    setError(null);
 
     try {
       await signIn(email, password);
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in");
+    } catch (error) {
+      const authError = error as AuthError;
+      setError(authError.message || "Failed to sign in");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
   return (
     <div className="flex justify-between text-n500 dark:text-n30 xxl:gap-20 max-xxl:container xxl:h-dvh max-xxl:justify-center relative">
@@ -52,81 +52,63 @@ function SignIn() {
         </div>
 
         <div className="w-full pt-4">
-          <p className="text-2xl font-semibold">Welcome Back!</p>
-          <p className="text-sm pt-4">Sign in to your account and join us</p>
+          <p className="text-2xl font-semibold">Welcome Back</p>
+          <p className="text-sm pt-4">
+            Sign in to your account to continue using AIQuill
+          </p>
 
-          <form
-            onSubmit={handleSubmit}
-            className="pt-10 grid grid-cols-2 gap-4 sm:gap-6"
-          >
-            <div className="col-span-2">
-              <FormInput
-                title="Enter Your Email ID"
-                placeholder="Your email ID here"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="col-span-2">
-              <FormInput
-                title="Password"
-                placeholder="*******"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <Link
-                href="/"
-                className="text-end block pt-4 text-primaryColor text-sm"
-              >
-                Forget password?
-              </Link>
-            </div>
+          <form onSubmit={handleSubmit} className="pt-10">
+            <div className="flex flex-col gap-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-3 rounded-lg border border-primaryColor/30 bg-white dark:bg-n0 text-n700 dark:text-n30"
+                  required
+                />
+              </div>
 
-            <p className="col-span-2 text-sm pt-2">
-              Don&apos;t have an accounts?{" "}
-              <Link href="/sign-up" className="text-errorColor font-semibold">
-                Sign Up
-              </Link>
-            </p>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-3 rounded-lg border border-primaryColor/30 bg-white dark:bg-n0 text-n700 dark:text-n30"
+                  required
+                />
+              </div>
 
-            <div className="col-span-2">
+              {error && (
+                <p className="text-errorColor text-sm">{error}</p>
+              )}
+
               <button
                 type="submit"
                 disabled={isLoading}
-                className="text-sm font-medium text-white bg-primaryColor text-center py-3 px-6 rounded-full block w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-6 bg-primaryColor text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </button>
-              {error && (
-                <p className="text-errorColor text-sm pt-2">
-                  {error}
-                </p>
-              )}
+            </div>
+
+            <div className="pt-6 text-center">
+              <p className="text-sm">
+                Don&apos;t have an account?{" "}
+                <Link href="/sign-up" className="text-primaryColor hover:underline">
+                  Sign up
+                </Link>
+              </p>
             </div>
           </form>
-
-          <div className="pt-8">
-            <div className="flex justify-center items-center">
-              <div className="bg-n30 flex-1 h-px"></div>
-              <p className="text-xs px-2">Or Continue</p>
-              <div className="bg-n30 flex-1 h-px"></div>
-            </div>
-            <div className="flex justify-center items-center pt-6 gap-2">
-              <div className="flex justify-center items-center p-2 rounded-full border border-primaryColor/30 bg-primaryColor/5 text-xl hover:bg-primaryColor hover:border-primaryColor duration-300 hover:text-white cursor-pointer">
-                <PiFacebookLogo />
-              </div>
-              <div className="flex justify-center items-center p-2 rounded-full border border-primaryColor/30 bg-primaryColor/5 text-xl hover:bg-primaryColor hover:border-primaryColor duration-300 hover:text-white cursor-pointer">
-                <PiInstagramLogo />
-              </div>
-              <div className="flex justify-center items-center p-2 rounded-full border border-primaryColor/30 bg-primaryColor/5 text-xl hover:bg-primaryColor hover:border-primaryColor duration-300 hover:text-white cursor-pointer">
-                <PiGoogleLogo />
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="flex justify-center items-center w-full pt-4">
