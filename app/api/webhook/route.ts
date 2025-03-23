@@ -3,9 +3,8 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Stripe with the secret key
-// @ts-ignore - Stripe types are sometimes outdated compared to their API versions
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16' as any,
+  apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
 });
 
 // Initialize Supabase admin client with service role key for direct DB access
@@ -33,11 +32,10 @@ export async function POST(req: NextRequest) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (err) {
-    // @ts-ignore - Stripe error types can vary
-    const message = err?.message || 'Webhook Error';
-    console.error(`Webhook signature verification failed: ${message}`);
-    return NextResponse.json({ error: message }, { status: 400 });
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error(`Webhook signature verification failed: ${error.message}`);
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
   console.log(`Event received: ${event.type}`);
@@ -246,4 +244,4 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     // Update status to past_due or whatever the current status is
     await handleSubscriptionUpdated(subscription);
   }
-}
+} 
