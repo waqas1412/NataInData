@@ -30,8 +30,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Public routes that don't require auth or subscription
   const publicRoutes = ["/sign-in", "/sign-up", "/confirm-email"];
   
+  // Routes that require auth but not subscription
+  const authOnlyRoutes = ["/pricing", "/subscription-status"];
+  
   // Check if current route is public
   const isPublicRoute = publicRoutes.includes(pathname);
+  
+  // Check if current route only requires auth
+  const isAuthOnlyRoute = authOnlyRoutes.includes(pathname);
 
   useEffect(() => {
     console.log("AuthProvider initialized, pathname:", pathname);
@@ -62,8 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         if (isPublicRoute) {
-          console.log("Has session, redirecting to new-chat");
-          router.push("/new-chat");
+          console.log("Has session, redirecting to home page");
+          router.push("/"); // Send to home page for subscription check
         }
       }
     });
@@ -90,8 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session) {
         // User is signed in
         if (isPublicRoute) {
-          console.log("Auth changed, has session, redirecting to new-chat");
-          router.push("/new-chat");
+          console.log("Auth changed, has session, redirecting to home page");
+          router.push("/"); // Send to home page for subscription check
         }
       } else {
         // User is signed out
@@ -116,27 +122,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkingSubscription,
         hasActiveSubscription,
         isPublicRoute,
+        isAuthOnlyRoute,
         subscriptionStatus: subscription?.status,
       });
       
-      if (user && !isLoading && !checkingSubscription && !hasActiveSubscription && !isPublicRoute) {
-        console.log("No active subscription, redirecting to payment");
-        
-        // Check once more from the database before redirecting
-        await fetchSubscription(user.id);
-        
-        // If still no active subscription after fresh check, redirect
-        if (!useSubscriptionStore.getState().hasActiveSubscription) {
-          console.log("Confirmed no active subscription after recheck, redirecting to payment");
-          useSubscriptionStore.getState().redirectToPayment(user.id);
-        } else {
-          console.log("Found active subscription after recheck, not redirecting");
-        }
+      // For all non-public and non-auth-only routes, redirect to pricing if no subscription
+      if (user && !isLoading && !checkingSubscription && !hasActiveSubscription && !isPublicRoute && !isAuthOnlyRoute) {
+        console.log("No active subscription, redirecting to pricing page");
+        router.push("/pricing");
       }
     };
     
     checkAndHandleSubscription();
-  }, [user, isLoading, checkingSubscription, hasActiveSubscription, isPublicRoute, subscription?.status, fetchSubscription]);
+  }, [user, isLoading, checkingSubscription, hasActiveSubscription, isPublicRoute, isAuthOnlyRoute, subscription?.status, router]);
 
   // Show nothing while loading
   if (isLoading) {
