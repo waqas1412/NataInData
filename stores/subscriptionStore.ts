@@ -1,127 +1,112 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { supabase } from '@/lib/supabase'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { supabase } from "@/lib/supabase";
 
 export interface Subscription {
-  id: string
-  user_id: string
-  stripe_customer_id: string
-  stripe_subscription_id: string
-  status: 'active' | 'inactive' | 'cancelled' | 'canceled' | 'trialing' | 'past_due' | 'incomplete' | 'incomplete_expired' | 'unpaid'
-  price_id: string
-  current_period_start: string
-  current_period_end: string
-  created_at: string
-  updated_at: string
-}
-
-// Helper function to check if a subscription status is considered active
-const isActiveStatus = (status: string): boolean => {
-  // Stripe considers 'active' and 'trialing' as active subscription states
-  return status === 'active' || status === 'trialing';
+  id: string;
+  user_id: string;
+  status: string;
+  price_id: string | null;
+  quantity: number | null;
+  cancel_at_period_end: boolean;
+  created_at: string;
+  current_period_start: string;
+  current_period_end: string;
+  ended_at: string | null;
+  cancel_at: string | null;
+  canceled_at: string | null;
+  trial_start: string | null;
+  trial_end: string | null;
+  stripe_subscription_id: string;
+  stripe_customer_id: string;
 }
 
 interface SubscriptionState {
-  subscription: Subscription | null
-  isLoading: boolean
-  hasActiveSubscription: boolean
-  fetchSubscription: (userId: string) => Promise<void>
-  setSubscription: (subscription: Subscription | null) => void
-  redirectToPayment: (userId: string) => void
+  subscription: Subscription | null;
+  hasActiveSubscription: boolean;
+  isLoading: boolean;
+  error: string | null;
+  setSubscription: (subscription: Subscription | null) => void;
+  fetchSubscription: (userId: string) => Promise<void>;
+  redirectToPayment: (userId: string, email?: string) => void;
 }
 
 export const useSubscriptionStore = create<SubscriptionState>()(
   persist(
     (set, get) => ({
       subscription: null,
-      isLoading: true,
       hasActiveSubscription: false,
-      
+      isLoading: false,
+      error: null,
+
+      setSubscription: (subscription: Subscription | null) => {
+        set({
+          subscription,
+          hasActiveSubscription: subscription
+            ? ["active", "trialing"].includes(subscription.status)
+            : false,
+        });
+      },
+
       fetchSubscription: async (userId: string) => {
         try {
-          set({ isLoading: true })
-          console.log(`Fetching subscription for user: ${userId}`)
+          set({ isLoading: true, error: null });
           
           const { data, error } = await supabase
             .from('subscriptions')
             .select('*')
             .eq('user_id', userId)
-            .single()
-            
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          
           if (error) {
-            console.error('Error fetching subscription:', error)
-            set({ 
-              subscription: null, 
-              isLoading: false,
-              hasActiveSubscription: false 
-            })
-            return
+            if (error.code === 'PGRST116') {
+              // No subscription found - not an error
+              get().setSubscription(null);
+            } else {
+              throw error;
+            }
+          } else if (data) {
+            get().setSubscription(data as Subscription);
+          } else {
+            get().setSubscription(null);
           }
-          
-          // Check if subscription status is active or trialing
-          const isActive = isActiveStatus(data.status);
-          console.log(`Subscription status: ${data.status}, isActive: ${isActive}`)
-          
-          set({
-            subscription: data as Subscription,
-            isLoading: false,
-            hasActiveSubscription: isActive
-          })
         } catch (error) {
-          console.error('Error in fetchSubscription:', error)
-          set({ 
-            subscription: null, 
-            isLoading: false,
-            hasActiveSubscription: false 
-          })
+          console.error("Error fetching subscription:", error);
+          set({ error: error instanceof Error ? error.message : "An unknown error occurred" });
+        } finally {
+          set({ isLoading: false });
         }
       },
-      
-      setSubscription: (subscription: Subscription | null) => {
-        const isActive = subscription ? isActiveStatus(subscription.status) : false;
-        console.log(`Setting subscription, status: ${subscription?.status}, isActive: ${isActive}`)
-        set({ 
-          subscription, 
-          hasActiveSubscription: isActive 
-        })
-      },
-      
-      redirectToPayment: (userId: string) => {
-        const basePaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK
+
+      redirectToPayment: (userId: string, email?: string) => {
+        const paymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK;
+        if (!paymentLink) {
+          console.error("Payment link not found in environment variables");
+          return;
+        }
+
+        // Build query parameters
+        const queryParams = new URLSearchParams();
         
-        if (!basePaymentLink) {
-          console.error('Payment link not configured')
-          return
+        // Add client_reference_id
+        queryParams.append("client_reference_id", userId);
+        
+        // Add prefilled_email if provided
+        if (email) {
+          queryParams.append("prefilled_email", email);
         }
         
-        console.log(`Redirecting to payment link for user: ${userId}, hasActiveSubscription: ${get().hasActiveSubscription}`)
+        // Construct the full URL
+        const paymentURL = `${paymentLink}?${queryParams.toString()}`;
         
-        // Add user_id as client_reference_id to the URL
-        // This will help identify the user in Stripe webhook
-        const paymentLink = new URL(basePaymentLink)
-        
-        // Add user ID as a query parameter - Stripe will pass this in the metadata
-        paymentLink.searchParams.append('client_reference_id', userId)
-        
-        window.location.href = paymentLink.toString()
-      }
+        // Redirect to the payment link
+        window.location.href = paymentURL;
+      },
     }),
     {
-      name: 'subscription-storage',
-      // Important: make sure the state is properly persisted by including all relevant fields
-      partialize: (state) => ({
-        subscription: state.subscription,
-        hasActiveSubscription: state.hasActiveSubscription,
-      }),
-      // When state is rehydrated, recalculate hasActiveSubscription based on the subscription status
-      onRehydrateStorage: () => (state) => {
-        if (state && state.subscription) {
-          console.log('Rehydrating subscription state from storage')
-          const isActive = isActiveStatus(state.subscription.status)
-          state.hasActiveSubscription = isActive
-          console.log(`Rehydrated subscription status: ${state.subscription.status}, isActive: ${isActive}`)
-        }
-      }
+      name: "subscription-storage",
     }
   )
-) 
+); 
