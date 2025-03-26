@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { Check, Loader2 } from "lucide-react";
+import { Check, CreditCard, Zap } from "lucide-react";
+import { toast } from 'react-hot-toast';
 
 export default function PricingPage() {
   const router = useRouter();
