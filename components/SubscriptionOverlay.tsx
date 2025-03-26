@@ -1,6 +1,6 @@
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useAuthStore } from '@/stores/authStore';
-import { Loader2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useState } from 'react';
 
 interface SubscriptionOverlayProps {
