@@ -275,7 +275,7 @@ async function handleSubscriptionUpdated(supabaseAdmin: ReturnType<typeof create
     console.log(`Updating subscription: ${subscription.id}`);
     
     // First check if the subscription exists
-    const { data: existingSubscription, error: fetchError } = await supabaseAdmin
+    const { error: fetchError } = await supabaseAdmin
       .from('subscriptions')
       .select('id')
       .eq('stripe_subscription_id', subscription.id)
