@@ -25,22 +25,16 @@ const generalText =
   "Based on the gender identified in the uploaded data, the reply has been automatically generated with a appropriate data. However, you have the option to customize your reply by selecting from the available options below.";
 
 interface BotReplyProps {
-  content: string;
   replyType: string;
-  timestamp: string;
   isAnimation?: boolean;
   setScroll?: (value: boolean) => void;
-  emptyQuery?: () => void;
   hideSuggestions?: () => void;
 }
 
 export default function BotReply({
-  content,
   replyType,
-  timestamp,
   isAnimation = false,
   setScroll = () => {},
-  emptyQuery = () => {},
   hideSuggestions = () => {},
 }: BotReplyProps) {
   const { emptyQuery: chatHandlerEmptyQuery } = useChatHandler();
@@ -84,7 +78,7 @@ export default function BotReply({
     return () => {
       timeouts.forEach(clearTimeout);
     };
-  }, []);
+  }, [chatHandlerEmptyQuery, shouldHideSuggestions]);
   return (
     <div className="flex justify-start items-start gap-1 sm:gap-3  w-full max-w-[90%]  ">
       <Image src={logo} alt="" className=" max-sm:size-5 object-cover" />
