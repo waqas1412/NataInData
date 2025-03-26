@@ -27,9 +27,15 @@ const createSupabaseAdmin = () => {
 // Price ID from environment variable
 const PRICE_ID = process.env.STRIPE_PRICE_ID!;
 
+interface CheckoutRequest {
+  userId: string;
+  email: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { userId, email } = await req.json();
+    const body = await req.json() as CheckoutRequest;
+    const { userId, email } = body;
     
     if (!userId || !email) {
       console.error('Missing required parameters', { userId, email });
@@ -64,8 +70,8 @@ export async function POST(req: NextRequest) {
       
       try {
         // Verify the customer still exists in Stripe
-        const customer = await stripe.customers.retrieve(customerId);
-        if ((customer as any).deleted) {
+        const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
+        if (customer.deleted) {
           // Customer was deleted in Stripe, create a new one
           throw new Error('Customer was deleted in Stripe');
         }
@@ -86,12 +92,12 @@ export async function POST(req: NextRequest) {
     
     if (!customerId) {
       // Check if customer exists in Stripe by email AND has our metadata
-      const customers = await stripe.customers.list({
+      const { data: customers } = await stripe.customers.list({
         email: email,
         limit: 100 // Get more to search through metadata
       });
       
-      const existingCustomer = customers.data.find(
+      const existingCustomer = customers.find(
         cust => cust.metadata?.client_reference_id === userId || 
                 cust.metadata?.supabase_user_id === userId
       );
@@ -124,23 +130,23 @@ export async function POST(req: NextRequest) {
     
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       customer: customerId,
-      client_reference_id: userId,
-      subscription_data: {
-        metadata: {
-          supabase_user_id: userId,
-        },
-      },
-      mode: 'subscription',
+      payment_method_types: ['card'],
       line_items: [
         {
           price: PRICE_ID,
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_REDIRECT_URL}/?payment_status=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_REDIRECT_URL}/?payment_status=canceled`,
+      mode: 'subscription',
+      success_url: `${process.env.NEXT_PUBLIC_REDIRECT_URL}/new-chat?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_REDIRECT_URL}/new-chat?canceled=true`,
+      client_reference_id: userId,
+      subscription_data: {
+        metadata: {
+          supabase_user_id: userId,
+        },
+      },
     });
     
     console.log('Checkout session created', session.id);
