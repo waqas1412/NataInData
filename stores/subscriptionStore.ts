@@ -85,29 +85,47 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         }
       },
 
-      redirectToPayment: (userId: string, email?: string) => {
-        const paymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK;
-        if (!paymentLink) {
-          console.error("Payment link not found in environment variables");
-          return;
-        }
+      redirectToPayment: async (userId: string, email?: string) => {
+        try {
+          if (!userId) {
+            console.error("User ID is required");
+            return;
+          }
 
-        // Build query parameters
-        const queryParams = new URLSearchParams();
-        
-        // Add client_reference_id
-        queryParams.append("client_reference_id", userId);
-        
-        // Add prefilled_email if provided
-        if (email) {
-          queryParams.append("prefilled_email", email);
+          if (!email) {
+            console.error("Email is required");
+            return;
+          }
+
+          set({ isLoading: true, error: null });
+
+          // Call our new API endpoint to create a checkout session
+          const response = await fetch('/api/create-checkout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId, email }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || 'Failed to create checkout session');
+          }
+
+          if (data.url) {
+            // Redirect to the checkout URL
+            window.location.href = data.url;
+          } else {
+            throw new Error('No checkout URL returned');
+          }
+        } catch (error) {
+          console.error("Error redirecting to payment:", error);
+          set({ error: error instanceof Error ? error.message : "Failed to redirect to payment" });
+        } finally {
+          set({ isLoading: false });
         }
-        
-        // Construct the full URL
-        const paymentURL = `${paymentLink}?${queryParams.toString()}`;
-        
-        // Redirect to the payment link
-        window.location.href = paymentURL;
       },
     }),
     {

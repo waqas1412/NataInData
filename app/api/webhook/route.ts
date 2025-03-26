@@ -66,17 +66,15 @@ export async function POST(req: NextRequest) {
   console.log(`Event received: ${event.type}`);
   
   try {
-    // Process the event synchronously and capture any errors
+    // Process the event
     await processWebhookEvent(event);
     
-    // Only send success if processing completes without errors
-    return NextResponse.json({ received: true, processed: true }, { status: 200 });
+    // Always return success, even if we couldn't process the event fully
+    return NextResponse.json({ received: true }, { status: 200 });
   } catch (error) {
+    // Log the error but still return success to Stripe
     console.error('Error processing webhook event:', error);
-    
-    // Return an error response to Stripe - this will cause them to retry
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error processing webhook';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json({ received: true }, { status: 200 });
   }
 }
 
@@ -181,15 +179,18 @@ async function handleSubscriptionCreated(supabaseAdmin: ReturnType<typeof create
       throw new Error('Cannot handle deleted customer');
     }
     
-    // First, try to get user_id from client_reference_id
-    const clientReferenceId = customerData.metadata?.client_reference_id;
+    // First, try to get user_id from metadata
+    let userId = customerData.metadata?.client_reference_id || 
+                 customerData.metadata?.supabase_user_id ||
+                 subscription.metadata?.supabase_user_id;
+                 
     const customerEmail = customerData.email;
-    let userId = clientReferenceId;
     
     console.log('Customer data:', { 
       email: customerEmail, 
       metadata: customerData.metadata,
-      clientReferenceId
+      subscriptionMetadata: subscription.metadata,
+      userId
     });
     
     // If user_id not in metadata, find by email using the admin API
@@ -202,43 +203,69 @@ async function handleSubscriptionCreated(supabaseAdmin: ReturnType<typeof create
         
         if (error) {
           console.error('Error listing users:', error);
-          throw error;
+          // Don't throw here, just log and continue
+          return;
         }
         
         const matchedUser = data.users.find(u => u.email === customerEmail);
         if (matchedUser) {
           userId = matchedUser.id;
           console.log(`Found user by email lookup: ${userId}`);
+          
+          // Update customer metadata since we found the user
+          await stripe.customers.update(customerId, {
+            metadata: {
+              client_reference_id: userId,
+              supabase_user_id: userId
+            }
+          });
+          
+          // Update subscription metadata too
+          await stripe.subscriptions.update(subscription.id, {
+            metadata: {
+              supabase_user_id: userId
+            }
+          });
         } else {
-          throw new Error(`No user found with email: ${customerEmail}`);
+          console.log(`No user found with email: ${customerEmail}`);
+          // Don't throw here, just log and return
+          return;
         }
       } catch (error) {
         console.error('Error in auth admin API:', error);
-        throw error;
+        // Don't throw here, just log and return
+        return;
       }
     }
     
     if (!userId) {
-      throw new Error(`User not found for email: ${customerEmail}`);
+      console.log(`No user ID found for customer: ${customerId}`);
+      // Don't throw here, just log and return
+      return;
     }
 
-    console.log(`Creating subscription for user: ${userId}`);
+    console.log(`Managing subscription for user: ${userId}`);
 
-    // UUID for Supabase primary key (do not use stripe subscription ID as the primary key)
-    const uuid = crypto.randomUUID();
+    // First check if subscription exists by stripe_subscription_id
+    const { data: existingSubscription, error: fetchError } = await supabaseAdmin
+      .from('subscriptions')
+      .select('id, status')
+      .eq('stripe_subscription_id', subscription.id)
+      .single();
+    
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows returned
+      console.error('Error fetching subscription:', fetchError);
+      throw fetchError;
+    }
 
-    // Extended subscription data to better match Stripe's fields
     const subscriptionData = {
-      id: uuid, // Generate a UUID for the primary key
-      user_id: userId,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subscription.id, // Store Stripe's subscription ID separately
       status: subscription.status,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
       price_id: subscription.items.data[0]?.price?.id || '',
       product_id: subscription.items.data[0]?.price?.product as string || '',
       quantity: subscription.items.data[0]?.quantity || 1,
       cancel_at_period_end: subscription.cancel_at_period_end,
-      created_at: new Date(subscription.created * 1000).toISOString(),
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000).toISOString() : null,
@@ -253,20 +280,77 @@ async function handleSubscriptionCreated(supabaseAdmin: ReturnType<typeof create
       updated_at: new Date().toISOString(),
     };
 
-    console.log('Upserting subscription data to Supabase:', subscriptionData.stripe_subscription_id);
-    const { error } = await supabaseAdmin
-      .from('subscriptions')
-      .upsert(subscriptionData, { onConflict: 'stripe_subscription_id' });
+    if (existingSubscription) {
+      // Update existing subscription
+      console.log(`Updating existing subscription for user: ${userId}`);
+      const { error } = await supabaseAdmin
+        .from('subscriptions')
+        .update(subscriptionData)
+        .eq('id', existingSubscription.id);
 
-    if (error) {
-      console.error('Error saving subscription:', error);
-      throw error;
+      if (error) {
+        console.error('Error updating existing subscription:', error);
+        throw error;
+      }
+      
+      console.log('Subscription updated successfully');
+    } else {
+      // Check if user has any other active subscriptions
+      const { data: userSubscriptions, error: userSubError } = await supabaseAdmin
+        .from('subscriptions')
+        .select('id, status')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (userSubError) {
+        console.error('Error checking user subscriptions:', userSubError);
+        throw userSubError;
+      }
+
+      // If user has other subscriptions, update them to cancelled
+      if (userSubscriptions && userSubscriptions.length > 0) {
+        console.log(`User has ${userSubscriptions.length} existing subscriptions, marking them as cancelled`);
+        
+        const { error: updateError } = await supabaseAdmin
+          .from('subscriptions')
+          .update({
+            status: 'cancelled',
+            ended_at: new Date().toISOString(),
+            canceled_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('Error updating existing subscriptions:', updateError);
+          throw updateError;
+        }
+      }
+
+      // Create new subscription with UUID
+      const uuid = crypto.randomUUID();
+      console.log(`Creating new subscription for user: ${userId} with id: ${uuid}`);
+      
+      const { error } = await supabaseAdmin
+        .from('subscriptions')
+        .insert({
+          id: uuid,
+          user_id: userId,
+          created_at: new Date(subscription.created * 1000).toISOString(),
+          ...subscriptionData
+        });
+
+      if (error) {
+        console.error('Error creating new subscription:', error);
+        throw error;
+      }
+      
+      console.log('New subscription created successfully');
     }
-    
-    console.log('Subscription created successfully');
   } catch (error) {
     console.error('Error in handleSubscriptionCreated:', error);
-    throw error; // Propagate the error to trigger retry from Stripe
+    // Log error but don't throw, as we want to acknowledge the webhook
+    return;
   }
 }
 
