@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { Check } from "lucide-react";
-import { toast } from 'react-hot-toast';
 
 export default function PricingPage() {
   const router = useRouter();
