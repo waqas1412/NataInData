@@ -24,181 +24,161 @@ import BotSuggestionReply from "./BotSuggestionReply";
 const generalText =
   "Based on the gender identified in the uploaded data, the reply has been automatically generated with a appropriate data. However, you have the option to customize your reply by selecting from the available options below.";
 
-type BotReplyProps = {
+interface BotReplyProps {
+  reply: string;
   replyType: string;
-  setScroll: React.Dispatch<React.SetStateAction<boolean>>;
   isAnimation: boolean;
-};
+  setScroll: (value: boolean) => void;
+  emptyQuery: () => void;
+  hideSuggestions: () => void;
+}
 
-function BotReply({ replyType, setScroll, isAnimation }: BotReplyProps) {
-  const { emptyQuery } = useChatHandler();
-  const [showElements, setShowElements] = useState({
+interface ShowElementsState {
+  generatingMessage: boolean;
+  generatingDots: boolean;
+  generatingText: boolean;
+  generatingCode: boolean;
+  generatingImage: boolean;
+  generatingVideo: boolean;
+  generatingAudio: boolean;
+  generatingDataTable: boolean;
+  generatingRetouch: boolean;
+  generatingShare: boolean;
+  generatingDownload: boolean;
+  generatingCopy: boolean;
+  botReplyText: boolean;
+  preview: boolean;
+  lastMessage: boolean;
+}
+
+export default function BotReply({ 
+  reply, 
+  replyType, 
+  isAnimation,
+  setScroll,
+  emptyQuery,
+  hideSuggestions
+}: BotReplyProps) {
+  const { emptyQuery: chatHandlerEmptyQuery } = useChatHandler();
+  const [showElements, setShowElements] = useState<ShowElementsState>({
     generatingMessage: false,
+    generatingDots: false,
+    generatingText: false,
+    generatingCode: false,
+    generatingImage: false,
+    generatingVideo: false,
+    generatingAudio: false,
+    generatingDataTable: false,
+    generatingRetouch: false,
+    generatingShare: false,
+    generatingDownload: false,
+    generatingCopy: false,
     botReplyText: false,
     preview: false,
     lastMessage: false,
   });
 
-  const hideSuggestions = [
-    "video",
-    "audio",
-    "image",
-    "retouch",
-    "data-table",
+  const isCodeBlock = [
+    "javascript",
+    "typescript",
+    "python",
+    "java",
+    "cpp",
+    "csharp",
+    "php",
+    "ruby",
+    "go",
+    "rust",
+    "swift",
+    "kotlin",
+    "scala",
+    "r",
+    "dart",
+    "html",
+    "css",
+    "sql",
+    "shell",
+    "bash",
+    "powershell",
+    "yaml",
+    "json",
+    "markdown",
+    "text",
     "code",
   ].includes(replyType);
 
   useEffect(() => {
     if (isAnimation) {
-      const timeouts = [
-        setTimeout(() => {
-          setScroll(true);
-          setShowElements((prev) => ({ ...prev, generatingMessage: true }));
-        }, 3000),
-        setTimeout(() => {
-          setScroll(false);
-          setShowElements((prev) => ({ ...prev, botReplyText: true }));
-        }, 6000),
-        setTimeout(
-          () => {
-            setScroll(true);
-            setShowElements((prev) => ({ ...prev, preview: true }));
-          },
-          hideSuggestions ? 10000 : 8000
-        ),
-        setTimeout(() => setScroll(false), 10500),
-        setTimeout(
-          () => {
-            setScroll(true);
-            setShowElements((prev) => ({ ...prev, lastMessage: true }));
-          },
-          hideSuggestions ? 12000 : 10000
-        ),
-        setTimeout(() => emptyQuery(), 12500),
-      ];
-      return () => {
-        timeouts.forEach(clearTimeout);
-      };
-    } else {
-      setShowElements({
-        generatingMessage: true,
-        botReplyText: true,
-        preview: true,
-        lastMessage: true,
-      });
+      setScroll(true);
+      chatHandlerEmptyQuery();
+      hideSuggestions();
     }
-  }, []);
+  }, [isAnimation, setScroll, chatHandlerEmptyQuery, hideSuggestions]);
+
+  useEffect(() => {
+    const timeouts = [
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true }), 1000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true }), 2000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true }), 3000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true }), 4000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true, generatingImage: true }), 5000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true, generatingImage: true, generatingVideo: true }), 6000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true, generatingImage: true, generatingVideo: true, generatingAudio: true }), 7000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true, generatingImage: true, generatingVideo: true, generatingAudio: true, generatingDataTable: true }), 8000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true, generatingImage: true, generatingVideo: true, generatingAudio: true, generatingDataTable: true, generatingRetouch: true }), 9000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true, generatingImage: true, generatingVideo: true, generatingAudio: true, generatingDataTable: true, generatingRetouch: true, generatingShare: true }), 10000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true, generatingImage: true, generatingVideo: true, generatingAudio: true, generatingDataTable: true, generatingRetouch: true, generatingShare: true, generatingDownload: true }), 11000),
+      setTimeout(() => setShowElements({ ...showElements, generatingMessage: true, generatingDots: true, generatingText: true, generatingCode: true, generatingImage: true, generatingVideo: true, generatingAudio: true, generatingDataTable: true, generatingRetouch: true, generatingShare: true, generatingDownload: true, generatingCopy: true }), 12000),
+      setTimeout(() => chatHandlerEmptyQuery(), 12500),
+    ];
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [isAnimation, setScroll, chatHandlerEmptyQuery, hideSuggestions]);
   return (
     <div className="flex justify-start items-start gap-1 sm:gap-3  w-full max-w-[90%]  ">
-      <Image src={logo} alt="" className=" max-sm:size-5 object-cover" />
-      <div className="flex flex-col justify-start items-start gap-3 flex-1   ">
-        <p className="text-xs text-n100">Tutor Chatbot, 2 min ago</p>
-        <div className="text-sm bg-primaryColor/5 py-3 px-5 border border-primaryColor/20 rounded-lg w-full sm:max-w-[90%] ">
-          <div className="flex justify-start items-center gap-1">
-            <PiChecks className="text-successColor text-xl" />
-            <p>
-              {isAnimation ? (
-                <TypeAnimation
-                  sequence={["Scanning the data..."]}
-                  speed={20}
-                  cursor={false}
-                />
-              ) : (
-                "Scanning the data..."
-              )}
-            </p>
+      <div className="flex flex-col gap-2 w-full">
+        <div className="flex items-start gap-2">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4 h-4 text-white"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+              <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" />
+            </svg>
           </div>
-          {showElements.generatingMessage && (
-            <div className="flex justify-start items-center gap-1 pt-3">
-              <div className={`${isAnimation ? "circle" : ""}`}>
-                <PiSparkle className="text-secondaryColor text-xl " />
-              </div>
-              <p>
-                {isAnimation ? (
-                  <TypeAnimation
-                    sequence={["Generating answers for you..."]}
-                    speed={50}
-                    cursor={false}
-                    repeat={2}
-                  />
-                ) : (
-                  "Generating answers for you..."
-                )}
-              </p>
+          <div className="flex flex-col gap-1">
+            <div className="text-sm font-medium text-gray-900">Tutor Chatbot</div>
+            <div className="text-xs text-gray-500">
+              {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          {showElements.botReplyText && (
+            <div className="text-sm text-gray-700">
+              {reply}
             </div>
           )}
-
-          {showElements.botReplyText && (
-            <p className="pt-5">
-              {isAnimation ? (
-                <TypeAnimation
-                  splitter={(str) => str.split(/(?= )/)}
-                  sequence={[
-                    hideSuggestions
-                      ? generalText
-                      : "Please Click on the commands to generate pre defined reply:",
-                  ]}
-                  speed={20}
-                  cursor={false}
-                />
-              ) : hideSuggestions ? (
-                generalText
-              ) : (
-                "Please Click on the commands to generate pre defined reply:"
-              )}
-            </p>
+          {showElements.preview && (
+            <div className="text-sm text-gray-700">
+              {reply}
+            </div>
           )}
-
-          {replyType === "video" && (
-            <BotVideoReply show={showElements.preview} />
-          )}
-          {replyType === "audio" && (
-            <BotAudioClipReply show={showElements.preview} />
-          )}
-          {replyType === "image" && (
-            <BotImageReply show={showElements.preview} />
-          )}
-          {replyType === "retouch" && (
-            <BotRetouchImageReply show={showElements.preview} />
-          )}
-          {replyType === "data-table" && (
-            <BotTableReply show={showElements.preview} />
-          )}
-          {replyType === "code" && <BotCodeReply show={showElements.preview} />}
-
-          {!hideSuggestions && (
-            <BotSuggestionReply show={showElements.preview} />
-          )}
-
           {showElements.lastMessage && (
-            <p className="pt-5">
-              {isAnimation ? (
-                <TypeAnimation
-                  splitter={(str) => str.split(/(?= )/)}
-                  sequence={[
-                    "Would you like me to refine this further or add script elements? 🚀",
-                  ]}
-                  speed={20}
-                  cursor={false}
-                />
-              ) : (
-                "Would you like me to refine this further or add script elements? 🚀"
-              )}
-            </p>
+            <div className="text-sm text-gray-700">
+              {reply}
+            </div>
           )}
-        </div>
-        <div className=" flex justify-end items-center gap-2 cursor-pointer">
-          <PiSpeakerHigh />
-          <PiThumbsUp />
-          <PiThumbsDown />
-
-          <PiCopy />
-          <PiArrowsCounterClockwise />
-          <PiShareFat />
         </div>
       </div>
     </div>
   );
 }
-
-export default BotReply;
