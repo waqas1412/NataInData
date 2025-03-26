@@ -25,7 +25,6 @@ function ChatBox() {
   const { hasActiveSubscription } = useSubscriptionStore();
 
   const chatIdUrl = path.split("/chat/")[1];
-  const isGeneralChat = path === "/new-chat" || path === "/conversation";
 
   const handleSendMessage = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
