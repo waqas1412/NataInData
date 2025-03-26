@@ -29,7 +29,7 @@ function NewChat() {
           <div className="flex justify-start items-center gap-3">
             <Image src={logo} alt="" />
             <p className="text-2xl font-semibold text-n700 dark:text-n30">
-              Hello, I&apos;m AIQuill
+              Hello, I&apos;m Tutor Chatbot
             </p>
           </div>
           <p className="text-n700 pt-4 dark:text-n30">

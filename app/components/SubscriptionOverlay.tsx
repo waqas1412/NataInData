@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
-import { Crown, ArrowRight } from 'lucide-react';
+import { Crown, ArrowRight, X, LogIn } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-export default function SubscriptionOverlay() {
+interface SubscriptionOverlayProps {
+  onClose?: () => void;
+}
+
+export default function SubscriptionOverlay({ onClose }: SubscriptionOverlayProps) {
   const { user } = useAuthStore();
   const { redirectToPayment } = useSubscriptionStore();
   const [isVisible, setIsVisible] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // Add a small delay to trigger the fade-in animation
@@ -17,16 +23,36 @@ export default function SubscriptionOverlay() {
   const handleSubscribe = () => {
     if (user?.id) {
       redirectToPayment(user.id, user.email);
+    } else {
+      // If user is not logged in, redirect to sign-in page
+      handleClose();
+      router.push('/sign-in');
     }
+  };
+
+  const handleClose = () => {
+    setIsVisible(false);
+    // Add a small delay before calling onClose to allow fade-out animation
+    setTimeout(() => {
+      onClose?.();
+    }, 300);
   };
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       {/* Semi-transparent background */}
-      <div className="absolute inset-0 bg-black/0 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/0 backdrop-blur-sm" onClick={handleClose} />
 
       {/* Content */}
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+        {/* Close button */}
+        <button 
+          onClick={handleClose}
+          className="absolute top-4 right-4 p-1 rounded-full bg-white/20 text-white hover:bg-white/30 z-10"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
         {/* Header Section */}
         <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-purple-600 p-8 text-center">
           <div className="flex justify-center mb-4">
@@ -69,8 +95,17 @@ export default function SubscriptionOverlay() {
             onClick={handleSubscribe}
             className="w-full py-4 px-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-purple-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
           >
-            Subscribe Now
-            <ArrowRight className="ml-2 h-5 w-5" />
+            {user ? (
+              <>
+                Subscribe Now
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            ) : (
+              <>
+                Sign In to Subscribe
+                <LogIn className="ml-2 h-5 w-5" />
+              </>
+            )}
           </button>
         </div>
       </div>

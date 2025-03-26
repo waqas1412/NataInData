@@ -12,6 +12,19 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
+// This makes Next.js properly handle OPTIONS requests (CORS preflight)
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Allow': 'POST',
+      'Access-Control-Allow-Methods': 'POST',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type, stripe-signature',
+    },
+  });
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get('stripe-signature');
@@ -39,7 +52,21 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(`Event received: ${event.type}`);
+  
+  // Immediately acknowledge receipt of the valid webhook
+  // This sends a 200 OK response to Stripe as quickly as possible
+  const response = NextResponse.json({ received: true }, { status: 200 });
+  
+  // Process the event asynchronously
+  processWebhookEvent(event).catch(error => {
+    console.error('Error processing webhook event:', error);
+  });
+  
+  return response;
+}
 
+// Async function to process webhook events without blocking the response
+async function processWebhookEvent(event: Stripe.Event) {
   try {
     // Handle specific Stripe events
     switch (event.type) {
@@ -72,14 +99,10 @@ export async function POST(req: NextRequest) {
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
-
-    return NextResponse.json({ received: true }, { status: 200 });
   } catch (error) {
     console.error('Error processing webhook:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    // Even though we log errors, we don't return an error response
+    // since we've already sent the 200 OK to Stripe
   }
 }
 
@@ -140,16 +163,29 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 
   console.log(`Creating subscription for user: ${userId}`);
 
-  // Store subscription in database
+  // Extended subscription data to better match Stripe's fields
   const subscriptionData = {
+    id: subscription.id, // Use Stripe's subscription ID as our primary key
     user_id: userId,
     stripe_customer_id: customerId,
     stripe_subscription_id: subscription.id,
     status: subscription.status,
     price_id: subscription.items.data[0]?.price?.id || '',
+    product_id: subscription.items.data[0]?.price?.product as string || '',
+    quantity: subscription.items.data[0]?.quantity || 1,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    created_at: new Date(subscription.created * 1000).toISOString(),
     current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
     current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-    created_at: new Date().toISOString(),
+    ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000).toISOString() : null,
+    cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
+    canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+    trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+    trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+    currency: subscription.currency,
+    interval: subscription.items.data[0]?.plan?.interval || 'month',
+    interval_count: subscription.items.data[0]?.plan?.interval_count || 1,
+    amount: subscription.items.data[0]?.plan?.amount || 0,
     updated_at: new Date().toISOString(),
   };
 
@@ -172,14 +208,27 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   console.log(`Updating subscription: ${subscription.id}`);
   
-  // Update subscription status and period info
+  // Update subscription with all relevant fields
   try {
     const { error } = await supabaseAdmin
       .from('subscriptions')
       .update({
         status: subscription.status,
+        price_id: subscription.items.data[0]?.price?.id || '',
+        product_id: subscription.items.data[0]?.price?.product as string || '',
+        quantity: subscription.items.data[0]?.quantity || 1,
+        cancel_at_period_end: subscription.cancel_at_period_end,
         current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
         current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000).toISOString() : null,
+        cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
+        canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+        trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+        trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+        currency: subscription.currency,
+        interval: subscription.items.data[0]?.plan?.interval || 'month',
+        interval_count: subscription.items.data[0]?.plan?.interval_count || 1,
+        amount: subscription.items.data[0]?.plan?.amount || 0,
         updated_at: new Date().toISOString(),
       })
       .eq('stripe_subscription_id', subscription.id);
@@ -198,12 +247,15 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log(`Cancelling subscription: ${subscription.id}`);
   
-  // Update subscription status to cancelled
+  // Update subscription status to cancelled with additional fields
   try {
     const { error } = await supabaseAdmin
       .from('subscriptions')
       .update({
         status: 'cancelled',
+        ended_at: subscription.ended_at ? new Date(subscription.ended_at * 1000).toISOString() : new Date().toISOString(),
+        cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
+        canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('stripe_subscription_id', subscription.id);

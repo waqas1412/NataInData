@@ -13,12 +13,13 @@ function Explore() {
     <div className="w-full overflow-auto flex justify-center items-start ">
       <div className="flex flex-col justify-center items-center px-6 max-w-[1080px] w-full">
         <div className="text-center">
-          <p className="text-2xl font-semibold text-n700 dark:text-n30 ">
-            Explore AIQuill
-          </p>
-          <p className="pt-2 max-w-[600px]">
-            Discover and create custom versions of AIQuill that combine
-            instructions, extra knowledge, and any combination of skills.
+          <h2 className="md:text-3xl text-2xl font-extrabold mb-4 mt-3 text-center text-slate-700">
+            Explore Tutor Chatbot
+          </h2>
+          <p className="text-center md:text-lg text-base text-slate-500 md:w-3/4 mx-auto font-medium">
+            Discover and create custom versions of Tutor Chatbot that combine
+            your data and knowledge with AI capabilities to solve your unique
+            challenges.
           </p>
         </div>
         <div className="mt-10 flex justify-between items-center gap-2 py-1 sm:py-2 pr-2 pl-5 rounded-xl bg-primaryColor/5 border border-primaryColor/30 w-full">

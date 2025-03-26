@@ -92,7 +92,7 @@ function BotReply({ replyType, setScroll, isAnimation }: BotReplyProps) {
     <div className="flex justify-start items-start gap-1 sm:gap-3  w-full max-w-[90%]  ">
       <Image src={logo} alt="" className=" max-sm:size-5 object-cover" />
       <div className="flex flex-col justify-start items-start gap-3 flex-1   ">
-        <p className="text-xs text-n100">AIQuill, 2 min ago</p>
+        <p className="text-xs text-n100">Tutor Chatbot, 2 min ago</p>
         <div className="text-sm bg-primaryColor/5 py-3 px-5 border border-primaryColor/20 rounded-lg w-full sm:max-w-[90%] ">
           <div className="flex justify-start items-center gap-1">
             <PiChecks className="text-successColor text-xl" />
