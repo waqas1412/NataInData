@@ -18,7 +18,7 @@ const createSupabaseAdmin = () => {
   });
 };
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     console.log('Checking Supabase connection');
     
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const supabaseAdmin = createSupabaseAdmin();
     
     // Attempt to query the database
-    const { data, error } = await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('subscriptions')
       .select('count')
       .limit(1);
