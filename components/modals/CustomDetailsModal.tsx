@@ -168,10 +168,10 @@ function CustomDetailsModal() {
               <p className="text-lg font-medium">
                 Mermaid Chart: diagrams and charts
               </p>
-              <p className="text-sm pt-3">
-                Official AIQuill from the Mermaid team. Generate a Mermaid
-                diagram or chart with text including video generator and video
-                editor in one.
+              <p className="text-n50 text-sm">
+                Official Tutor Chatbot from the Mermaid team. Generate a Mermaid
+                diagram or chart with text prompt. Paste Mermaid code to
+                render a diagram. Read more at
               </p>
               <p className="text-xs pt-4">By demo.com</p>
             </div>

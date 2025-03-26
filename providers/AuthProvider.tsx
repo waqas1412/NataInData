@@ -26,16 +26,25 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [checkingSubscription, setCheckingSubscription] = useState(false);
-  const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const { user, setUser } = useAuthStore();
-  const { fetchSubscription, hasActiveSubscription } = useSubscriptionStore();
+  const { hasActiveSubscription, fetchSubscription } = useSubscriptionStore();
 
   // Public routes that don't require auth
   const publicRoutes = ["/sign-in", "/sign-up", "/confirm-email"];
   const isPublicRoute = publicRoutes.includes(pathname);
+  
+  // Auth routes that logged-in users should be redirected from
+  const authRoutes = ["/sign-in", "/sign-up"];
+  const isAuthRoute = authRoutes.includes(pathname);
+
+  // Fetch subscription data when user is authenticated
+  useEffect(() => {
+    if (user?.id) {
+      fetchSubscription(user.id);
+    }
+  }, [user?.id, fetchSubscription]);
 
   useEffect(() => {
     // Get initial session
@@ -43,18 +52,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       
+      // Fetch subscription data if user is authenticated
       if (currentUser?.id) {
-        setCheckingSubscription(true);
-        fetchSubscription(currentUser.id).finally(() => {
-          setCheckingSubscription(false);
-        });
+        fetchSubscription(currentUser.id);
       }
       
       setIsLoading(false);
 
       // Handle initial routing based on session
-      if (!session && !isPublicRoute) {
-        router.push("/sign-in");
+      if (session) {
+        // If user is logged in and trying to access sign-in/sign-up, redirect to app
+        if (isAuthRoute) {
+          router.push("/new-chat");
+        }
+      } else {
+        // If user is not logged in and trying to access protected route, redirect to sign-in
+        if (!isPublicRoute) {
+          router.push("/sign-in");
+        }
       }
     });
 
@@ -65,34 +80,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       
+      // Fetch subscription data if user is authenticated
       if (currentUser?.id) {
-        setCheckingSubscription(true);
-        fetchSubscription(currentUser.id).finally(() => {
-          setCheckingSubscription(false);
-        });
+        fetchSubscription(currentUser.id);
       }
       
       setIsLoading(false);
 
       // Handle routing based on auth state
-      if (!session && !isPublicRoute) {
-        router.push("/sign-in");
+      if (session) {
+        // If user is logged in and trying to access sign-in/sign-up, redirect to app
+        if (isAuthRoute) {
+          router.push("/new-chat");
+        }
+      } else {
+        // If user is not logged in and trying to access protected route, redirect to sign-in
+        if (!isPublicRoute) {
+          router.push("/sign-in");
+        }
       }
     });
 
     return () => {
       authSubscription.unsubscribe();
     };
-  }, [pathname, router, setUser, fetchSubscription, isPublicRoute]);
-
-  // Check subscription status and show overlay if needed
-  useEffect(() => {
-    if (user && !isLoading && !checkingSubscription && !hasActiveSubscription && !isPublicRoute) {
-      setShowSubscriptionOverlay(true);
-    } else {
-      setShowSubscriptionOverlay(false);
-    }
-  }, [user, isLoading, checkingSubscription, hasActiveSubscription, isPublicRoute]);
+  }, [pathname, router, setUser, isPublicRoute, isAuthRoute, fetchSubscription]);
 
   if (isLoading) {
     return null;
@@ -105,7 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       hasActiveSubscription 
     }}>
       {children}
-      {showSubscriptionOverlay && <SubscriptionOverlay />}
     </AuthContext.Provider>
   );
 }

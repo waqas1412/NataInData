@@ -31,6 +31,14 @@ interface SubscriptionState {
   redirectToPayment: (userId: string, email?: string) => void;
 }
 
+// Helper function to determine if the subscription is active
+const isSubscriptionActive = (subscription: Subscription | null): boolean => {
+  if (!subscription) return false;
+  
+  const activeStatuses = ['active', 'trialing', 'past_due'];
+  return activeStatuses.includes(subscription.status);
+};
+
 export const useSubscriptionStore = create<SubscriptionState>()(
   persist(
     (set, get) => ({
@@ -42,9 +50,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       setSubscription: (subscription: Subscription | null) => {
         set({
           subscription,
-          hasActiveSubscription: subscription
-            ? ["active", "trialing"].includes(subscription.status)
-            : false,
+          hasActiveSubscription: isSubscriptionActive(subscription),
         });
       },
 
@@ -52,29 +58,28 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         try {
           set({ isLoading: true, error: null });
           
+          // Don't use .single() to avoid 406 errors when no results
           const { data, error } = await supabase
             .from('subscriptions')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+            .limit(1);
           
           if (error) {
-            if (error.code === 'PGRST116') {
-              // No subscription found - not an error
-              get().setSubscription(null);
-            } else {
-              throw error;
-            }
-          } else if (data) {
-            get().setSubscription(data as Subscription);
+            throw error;
+          } else if (data && data.length > 0) {
+            // If data exists and has at least one item, use the first one
+            get().setSubscription(data[0] as Subscription);
           } else {
+            // No subscription found
             get().setSubscription(null);
           }
         } catch (error) {
           console.error("Error fetching subscription:", error);
           set({ error: error instanceof Error ? error.message : "An unknown error occurred" });
+          // Set subscription to null even on error to prevent blocking the UI
+          get().setSubscription(null);
         } finally {
           set({ isLoading: false });
         }
@@ -107,6 +112,10 @@ export const useSubscriptionStore = create<SubscriptionState>()(
     }),
     {
       name: "subscription-storage",
+      partialize: (state) => ({
+        subscription: state.subscription,
+        hasActiveSubscription: state.hasActiveSubscription,
+      }),
     }
   )
 ); 
