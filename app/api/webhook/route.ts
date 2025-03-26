@@ -65,59 +65,105 @@ export async function POST(req: NextRequest) {
 
   console.log(`Event received: ${event.type}`);
   
-  // Immediately acknowledge receipt of the valid webhook
-  // This sends a 200 OK response to Stripe as quickly as possible
-  const response = NextResponse.json({ received: true }, { status: 200 });
-  
-  // Process the event asynchronously
-  processWebhookEvent(event).catch(error => {
+  try {
+    // Process the event synchronously and capture any errors
+    await processWebhookEvent(event);
+    
+    // Only send success if processing completes without errors
+    return NextResponse.json({ received: true, processed: true }, { status: 200 });
+  } catch (error) {
     console.error('Error processing webhook event:', error);
-  });
-  
-  return response;
+    
+    // Return an error response to Stripe - this will cause them to retry
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error processing webhook';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
 }
 
-// Async function to process webhook events without blocking the response
+// Function to process webhook events
 async function processWebhookEvent(event: Stripe.Event) {
+  // Create a fresh Supabase client for each request
+  const supabaseAdmin = createSupabaseAdmin();
+  
+  // Handle specific Stripe events
+  switch (event.type) {
+    // New subscription created
+    case 'customer.subscription.created':
+      await handleSubscriptionCreated(supabaseAdmin, event.data.object as Stripe.Subscription);
+      break;
+
+    // Subscription updated (renewal, plan change, etc.)
+    case 'customer.subscription.updated':
+      await handleSubscriptionUpdated(supabaseAdmin, event.data.object as Stripe.Subscription);
+      break;
+
+    // Subscription cancelled or expired
+    case 'customer.subscription.deleted':
+      await handleSubscriptionDeleted(supabaseAdmin, event.data.object as Stripe.Subscription);
+      break;
+
+    // Payment successful
+    case 'invoice.payment_succeeded':
+      await handleInvoicePaymentSucceeded(supabaseAdmin, event.data.object as Stripe.Invoice);
+      break;
+
+    // Payment failed
+    case 'invoice.payment_failed':
+      await handleInvoicePaymentFailed(supabaseAdmin, event.data.object as Stripe.Invoice);
+      break;
+      
+    // Checkout session completed
+    case 'checkout.session.completed':
+      await handleCheckoutSessionCompleted(supabaseAdmin, event.data.object as Stripe.Checkout.Session);
+      break;
+      
+    // Invoice events  
+    case 'invoice.created':
+    case 'invoice.finalized':
+    case 'invoice.updated':
+    case 'invoice.paid':
+      // Log but don't error; we handle invoice.payment_succeeded instead
+      console.log(`Received invoice event: ${event.type}`);
+      break;
+      
+    // Customer events
+    case 'customer.created':
+    case 'customer.updated':
+      // Log but don't error; we process info via the subscription events
+      console.log(`Received customer event: ${event.type}`);
+      break;
+      
+    // Payment intents and payment methods
+    case 'payment_intent.created':
+    case 'payment_intent.succeeded':
+    case 'payment_method.attached':
+    case 'charge.succeeded':
+      // Log but don't error; we rely on subscription and invoice events
+      console.log(`Received payment event: ${event.type}`);
+      break;
+
+    // Handle other events as needed
+    default:
+      console.log(`Unhandled event type: ${event.type}`);
+  }
+}
+
+// New handler for checkout.session.completed events
+async function handleCheckoutSessionCompleted(supabaseAdmin: ReturnType<typeof createSupabaseAdmin>, session: Stripe.Checkout.Session) {
   try {
-    // Create a fresh Supabase client for each request
-    const supabaseAdmin = createSupabaseAdmin();
+    console.log(`Checkout session completed: ${session.id}`);
     
-    // Handle specific Stripe events
-    switch (event.type) {
-      // New subscription created
-      case 'customer.subscription.created':
-        await handleSubscriptionCreated(supabaseAdmin, event.data.object as Stripe.Subscription);
-        break;
-
-      // Subscription updated (renewal, plan change, etc.)
-      case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(supabaseAdmin, event.data.object as Stripe.Subscription);
-        break;
-
-      // Subscription cancelled or expired
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(supabaseAdmin, event.data.object as Stripe.Subscription);
-        break;
-
-      // Payment successful
-      case 'invoice.payment_succeeded':
-        await handleInvoicePaymentSucceeded(supabaseAdmin, event.data.object as Stripe.Invoice);
-        break;
-
-      // Payment failed
-      case 'invoice.payment_failed':
-        await handleInvoicePaymentFailed(supabaseAdmin, event.data.object as Stripe.Invoice);
-        break;
-
-      // Handle other events as needed
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
+    // If the session has a subscription, process it
+    if (session.subscription) {
+      // Fetch the subscription from Stripe
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      
+      // Handle the subscription creation
+      await handleSubscriptionCreated(supabaseAdmin, subscription);
     }
   } catch (error) {
-    console.error('Error processing webhook:', error);
-    // Even though we log errors, we don't return an error response
-    // since we've already sent the 200 OK to Stripe
+    console.error('Error handling checkout session completed:', error);
+    throw error; // Propagate the error
   }
 }
 
@@ -132,8 +178,7 @@ async function handleSubscriptionCreated(supabaseAdmin: ReturnType<typeof create
     
     // Make sure we're handling a proper customer, not a deleted one
     if (customerData.deleted) {
-      console.error('Cannot handle deleted customer');
-      return;
+      throw new Error('Cannot handle deleted customer');
     }
     
     // First, try to get user_id from client_reference_id
@@ -157,7 +202,7 @@ async function handleSubscriptionCreated(supabaseAdmin: ReturnType<typeof create
         
         if (error) {
           console.error('Error listing users:', error);
-          return;
+          throw error;
         }
         
         const matchedUser = data.users.find(u => u.email === customerEmail);
@@ -165,26 +210,29 @@ async function handleSubscriptionCreated(supabaseAdmin: ReturnType<typeof create
           userId = matchedUser.id;
           console.log(`Found user by email lookup: ${userId}`);
         } else {
-          console.log('No user found with this email');
+          throw new Error(`No user found with email: ${customerEmail}`);
         }
       } catch (error) {
         console.error('Error in auth admin API:', error);
+        throw error;
       }
     }
     
     if (!userId) {
-      console.error(`User not found for email: ${customerEmail}`);
-      return;
+      throw new Error(`User not found for email: ${customerEmail}`);
     }
 
     console.log(`Creating subscription for user: ${userId}`);
 
+    // UUID for Supabase primary key (do not use stripe subscription ID as the primary key)
+    const uuid = crypto.randomUUID();
+
     // Extended subscription data to better match Stripe's fields
     const subscriptionData = {
-      id: subscription.id, // Use Stripe's subscription ID as our primary key
+      id: uuid, // Generate a UUID for the primary key
       user_id: userId,
       stripe_customer_id: customerId,
-      stripe_subscription_id: subscription.id,
+      stripe_subscription_id: subscription.id, // Store Stripe's subscription ID separately
       status: subscription.status,
       price_id: subscription.items.data[0]?.price?.id || '',
       product_id: subscription.items.data[0]?.price?.product as string || '',
@@ -205,36 +253,45 @@ async function handleSubscriptionCreated(supabaseAdmin: ReturnType<typeof create
       updated_at: new Date().toISOString(),
     };
 
-    try {
-      console.log('Upserting subscription data to Supabase:', subscriptionData.id);
-      const { error } = await supabaseAdmin
-        .from('subscriptions')
-        .upsert(subscriptionData, { onConflict: 'stripe_subscription_id' });
+    console.log('Upserting subscription data to Supabase:', subscriptionData.stripe_subscription_id);
+    const { error } = await supabaseAdmin
+      .from('subscriptions')
+      .upsert(subscriptionData, { onConflict: 'stripe_subscription_id' });
 
-      if (error) {
-        console.error('Error saving subscription:', error);
-        throw error;
-      }
-      
-      console.log('Subscription created successfully');
-    } catch (error) {
-      console.error('Failed to save subscription:', error);
-      // Add more detailed error information for debugging
-      if (error instanceof Error) {
-        console.error('Error details:', error.message, error.stack);
-      }
+    if (error) {
+      console.error('Error saving subscription:', error);
+      throw error;
     }
+    
+    console.log('Subscription created successfully');
   } catch (error) {
     console.error('Error in handleSubscriptionCreated:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', error.message, error.stack);
-    }
+    throw error; // Propagate the error to trigger retry from Stripe
   }
 }
 
 async function handleSubscriptionUpdated(supabaseAdmin: ReturnType<typeof createSupabaseAdmin>, subscription: Stripe.Subscription) {
   try {
     console.log(`Updating subscription: ${subscription.id}`);
+    
+    // First check if the subscription exists
+    const { data: existingSubscription, error: fetchError } = await supabaseAdmin
+      .from('subscriptions')
+      .select('id')
+      .eq('stripe_subscription_id', subscription.id)
+      .single();
+      
+    if (fetchError) {
+      console.error('Error fetching subscription:', fetchError);
+      
+      // If subscription doesn't exist, create it
+      if (fetchError.code === 'PGRST116') {
+        console.log('Subscription not found, creating instead of updating');
+        return await handleSubscriptionCreated(supabaseAdmin, subscription);
+      }
+      
+      throw fetchError;
+    }
     
     // Update subscription with all relevant fields
     const { error } = await supabaseAdmin
@@ -268,9 +325,7 @@ async function handleSubscriptionUpdated(supabaseAdmin: ReturnType<typeof create
     console.log('Subscription updated successfully');
   } catch (error) {
     console.error('Failed to update subscription:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', error.message, error.stack);
-    }
+    throw error; // Propagate the error to trigger retry from Stripe
   }
 }
 
@@ -298,9 +353,7 @@ async function handleSubscriptionDeleted(supabaseAdmin: ReturnType<typeof create
     console.log('Subscription cancelled successfully');
   } catch (error) {
     console.error('Failed to cancel subscription:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', error.message, error.stack);
-    }
+    throw error; // Propagate the error to trigger retry from Stripe
   }
 }
 
@@ -317,10 +370,10 @@ async function handleInvoicePaymentSucceeded(supabaseAdmin: ReturnType<typeof cr
       await handleSubscriptionUpdated(supabaseAdmin, subscription);
     } catch (error) {
       console.error('Error handling invoice payment succeeded:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', error.message, error.stack);
-      }
+      throw error; // Propagate the error to trigger retry from Stripe
     }
+  } else {
+    console.log('Invoice payment succeeded, but no subscription attached');
   }
 }
 
@@ -338,9 +391,9 @@ async function handleInvoicePaymentFailed(supabaseAdmin: ReturnType<typeof creat
       await handleSubscriptionUpdated(supabaseAdmin, subscription);
     } catch (error) {
       console.error('Error handling invoice payment failed:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', error.message, error.stack);
-      }
+      throw error; // Propagate the error to trigger retry from Stripe
     }
+  } else {
+    console.log('Invoice payment failed, but no subscription attached');
   }
 } 
