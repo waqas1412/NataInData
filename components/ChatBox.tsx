@@ -1,6 +1,6 @@
 import { useChatHandler } from "@/stores/chatList";
 import { usePathname, useRouter } from "next/navigation";
-import React, { FormEvent, useState, useEffect } from "react";
+import React, { FormEvent, useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import {
   PiArrowUp,
@@ -19,6 +19,7 @@ const SubscriptionOverlay = dynamic(() => import("@/components/SubscriptionOverl
 function ChatBox() {
   const [inputText, setInputText] = useState("");
   const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const path = usePathname();
   const { 
@@ -38,6 +39,21 @@ function ChatBox() {
       router.push(`/chat/${currentChatId}`);
     }
   }, [currentChatId, chatIdUrl, path, router]);
+
+  // Focus input on mount
+  useEffect(() => {
+    // Only focus on desktop devices - avoid keyboard popup on mobile
+    if (inputRef.current && window.innerWidth > 768) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  // Focus the input when streaming ends
+  useEffect(() => {
+    if (!isStreaming && inputRef.current && window.innerWidth > 768) {
+      inputRef.current.focus();
+    }
+  }, [isStreaming]);
 
   const handleSendMessage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -73,6 +89,14 @@ function ChatBox() {
       
       // Clear input after sending
       setInputText("");
+      
+      // Focus the input again after sending a message
+      // Small timeout to ensure UI updates complete first
+      setTimeout(() => {
+        if (inputRef.current && window.innerWidth > 768) {
+          inputRef.current.focus();
+        }
+      }, 10);
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -87,6 +111,7 @@ function ChatBox() {
         >
           <div className="w-full bg-white rounded-lg max-lg:text-sm block dark:bg-n0">
             <input
+              ref={inputRef}
               className="w-full outline-none p-4 bg-transparent"
               placeholder={isStreaming ? "AI is generating a response..." : "Message Tutor Chatbot..."}
               value={inputText}
