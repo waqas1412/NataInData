@@ -1,4 +1,4 @@
-import { RealtimeChannel, User } from '@supabase/supabase-js'
+import { User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import { ChatMessagesType } from '@/stores/chatList'
 

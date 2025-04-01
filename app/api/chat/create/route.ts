@@ -43,10 +43,10 @@ export async function POST(req: NextRequest) {
       }),
       { status: 201 }
     );
-  } catch (error: any) {
-    console.error('Chat creation error:', error);
+  } catch (error: Error | unknown) {
+    console.error('Error creating chat:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Error processing your request' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Error creating chat' }),
       { status: 500 }
     );
   }

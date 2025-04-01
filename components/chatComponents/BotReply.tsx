@@ -116,6 +116,34 @@ export default function BotReply({
   // Remove chatHandlerEmptyQuery from dependencies to prevent infinite loops
   }, [shouldHideSuggestions, isStreaming, isRegularTextReply, setScroll]);
 
+  // Simulate the typing effect
+  useEffect(() => {
+    let typingTimeout: NodeJS.Timeout;
+    
+    if (isAnimation) {
+      let timePassed = 0;
+      const addCharacters = () => {
+        timePassed += 100;
+        if (timePassed >= 1000) {
+          setShowElements((prev) => ({ ...prev, botReplyText: true }));
+          hideSuggestions();
+          // Only call this if we're not currently streaming a message
+          if (!isStreaming) {
+            chatHandlerEmptyQuery(); 
+          }
+        } else {
+          typingTimeout = setTimeout(addCharacters, 100);
+        }
+      };
+      
+      typingTimeout = setTimeout(addCharacters, 100);
+    }
+    
+    return () => {
+      clearTimeout(typingTimeout);
+    };
+  }, [isAnimation, hideSuggestions, isStreaming, chatHandlerEmptyQuery]);
+
   return (
     <div className="flex justify-start items-start gap-1 sm:gap-3 w-full px-4">
       <Image src={logo} alt="" className="max-sm:size-5 object-cover" />

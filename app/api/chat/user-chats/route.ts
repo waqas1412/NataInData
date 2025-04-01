@@ -18,10 +18,10 @@ export async function GET(req: NextRequest) {
       JSON.stringify({ chats }),
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('Error fetching user chats:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to fetch chats' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Error fetching user chats' }),
       { status: 500 }
     );
   }

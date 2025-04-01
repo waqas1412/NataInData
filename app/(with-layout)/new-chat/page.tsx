@@ -7,12 +7,10 @@ import ChatBox from "@/components/ChatBox";
 import { useChatHandler } from "@/stores/chatList";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/authStore";
 
 function NewChat() {
   const router = useRouter();
   const { handleSubmit, fetchUserChatsFromSupabase, isLoading } = useChatHandler();
-  const { user } = useAuthStore();
 
   // Fetch chats when component mounts
   useEffect(() => {

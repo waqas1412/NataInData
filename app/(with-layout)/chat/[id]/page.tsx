@@ -1,12 +1,10 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useRouter, usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useChatHandler, Chat } from "@/stores/chatList";
-import Image from "next/image";
 import MyReply from "@/components/chatComponents/MyReply";
 import BotReply from "@/components/chatComponents/BotReply";
 import ChatBox from "@/components/ChatBox";
-import { useAuthStore } from "@/stores/authStore";
 
 // Simple circular loader component
 const CircularLoader = () => (
@@ -15,20 +13,13 @@ const CircularLoader = () => (
 
 export default function CustomChat() {
   const { id } = useParams();
-  const pathname = usePathname();
-  const userScrollRef = useRef<boolean>(true);
   const scrollBoxRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
-  const [scroll, setScroll] = useState(false);
+  const [, setScroll] = useState(false);
   
-  // Get the user for realtime subscriptions
-  const user = useAuthStore((state) => state.user);
-
   // Get chat state and functions
   const {
     chatList,
-    updateChatList,
-    currentChatId,
     setCurrentChatId,
     fetchUserChatsFromSupabase,
     streamingMessage,

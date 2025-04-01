@@ -25,7 +25,6 @@ function ChatBox() {
     userQuery, 
     handleSubmit, 
     setUserQuery, 
-    streamingMessage, 
     isStreaming, 
     currentChatId 
   } = useChatHandler();

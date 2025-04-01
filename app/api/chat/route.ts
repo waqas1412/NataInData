@@ -1,9 +1,15 @@
-import { supabase } from '@/lib/supabase';
 import openai from '@/lib/openai';
 import { NextRequest } from 'next/server';
 import { addMessageToChat } from '@/lib/supabase-helpers';
+import { ChatCompletionMessageParam } from 'openai/resources';
 
 export const runtime = 'edge';
+
+// Define types for the messages
+interface ChatMessage {
+  isUser: boolean;
+  text: string | object;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,21 +37,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Convert messages to the format OpenAI expects
-    const openaiMessages = messages.map((message: any) => ({
+    const openaiMessages: ChatCompletionMessageParam[] = messages.map((message: ChatMessage) => ({
       role: message.isUser ? 'user' : 'assistant',
       content: typeof message.text === 'string' ? message.text : JSON.stringify(message.text),
-    }));
+    })) as ChatCompletionMessageParam[];
 
     // Create streaming response with OpenAI
     const stream = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      messages: openaiMessages as any, // Type assertion to bypass TypeScript checks
+      messages: openaiMessages,
       stream: true,
     });
 
-    // Create a decoder to handle the stream chunks
+    // Create a encoder to handle the stream chunks
     const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
     let fullResponse = '';
 
     // Return a readable stream response
@@ -73,10 +78,10 @@ export async function POST(req: NextRequest) {
         }
       })
     );
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('Chat API error:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Error processing your request' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Error processing your request' }),
       { status: 500 }
     );
   }
