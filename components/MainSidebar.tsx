@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import fav from "@/public/images/favicon.png";
 import {
   PiAlignLeft,
@@ -31,19 +31,75 @@ const SubscriptionOverlay = dynamic(() => import("@/app/components/SubscriptionO
   ssr: false,
 });
 
+// Number of chats to show per "page"
+const CHATS_PER_PAGE = 10;
+
 type MainSidebarProps = {
   showSidebar: boolean;
   setShowSidebar: React.Dispatch<React.SetStateAction<boolean>>;
 };
+
 function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   const [showMoreButton, setShowMoreButton] = useState(NaN);
   const { modalOpen } = useMainModal();
   const { chatList } = useChatHandler();
-  const [showAllRecentChats, setShowAllRecentChats] = useState(false);
-  const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(false);
+  const [displayedChats, setDisplayedChats] = useState<Array<any>>([]);
+  const [page, setPage] = useState(1);
+  const [hasMoreChats, setHasMoreChats] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const chatListRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const { hasActiveSubscription } = useSubscriptionStore();
+  
+  // Initialize chats display
+  useEffect(() => {
+    if (chatList && chatList.length > 0) {
+      const initialChats = chatList.slice(0, CHATS_PER_PAGE);
+      setDisplayedChats(initialChats);
+      setHasMoreChats(chatList.length > CHATS_PER_PAGE);
+      setPage(1);
+    }
+  }, [chatList]);
+  
+  // Setup intersection observer for infinite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMoreChats) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          loadMoreChats();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMoreChats, isLoadingMore, chatList]);
+  
+  // Load more chats when scrolling down
+  const loadMoreChats = () => {
+    if (isLoadingMore || !hasMoreChats || !chatList) return;
+    
+    setIsLoadingMore(true);
+    
+    // Calculate the next batch of chats to load
+    const nextPage = page + 1;
+    const endIdx = nextPage * CHATS_PER_PAGE;
+    const newChats = chatList.slice(0, endIdx);
+    
+    // Update state
+    setDisplayedChats(newChats);
+    setPage(nextPage);
+    setHasMoreChats(endIdx < chatList.length);
+    
+    setTimeout(() => {
+      setIsLoadingMore(false);
+    }, 300);
+  };
   
   useEffect(() => {
     if (window.innerWidth > 992) {
@@ -75,19 +131,22 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
     }
   };
 
+  const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(false);
+
   return (
     <>
       <div
-        className={`w-[312px] bg-white dark:bg-n0 border-r border-primaryColor/20  h-dvh overflow-hidden duration-500 max-lg:absolute  z-40  top-0  left-0   ${
+        className={`w-[312px] bg-white dark:bg-n0 border-r border-primaryColor/20 h-dvh overflow-hidden duration-500 max-lg:absolute z-40 top-0 left-0 ${
           showSidebar
-            ? "  visible opacity-100 "
+            ? "visible opacity-100"
             : "max-lg:invisible max-lg:opacity-0 ml-[-312px]"
         }`}
       >
         <div
-          className={` p-5 bg-primaryColor/5  overflow-auto h-full flex flex-col justify-between `}
+          className="p-5 bg-primaryColor/5 h-full flex flex-col"
         >
-          <div className="">
+          {/* Header section - fixed */}
+          <div className="flex-shrink-0">
             <div className="flex justify-between items-center">
               <div className="flex justify-start items-center gap-1.5">
                 <Image src={fav} alt="" />
@@ -104,7 +163,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                 </button>
                 <button
                   onClick={() => setShowSidebar(false)}
-                  className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20  dark:bg-n0"
+                  className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 dark:bg-n0"
                 >
                   <PiArrowUUpLeft />
                 </button>
@@ -147,89 +206,90 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             </div>
           </div>
 
-          <div className="pb-5 flex-1 flex flex-col justify-start items-start w-full ">
-            <p className="text-xs font-semibold text-n700 dark:text-n30">
+          {/* Chat list section - scrollable */}
+          <div className="flex-1 flex flex-col min-h-0 mb-3">
+            <p className="text-xs font-semibold text-n700 dark:text-n30 mb-2">
               Recent
             </p>
-            <div className="flex flex-col gap-1 w-full">
-              <div className="flex flex-col gap-1 justify-start items-start w-full ">
-                {chatList
-                  .slice(0, showAllRecentChats ? chatList.length : 6)
-                  .map(({ id, title }, idx) => (
-                    <div
-                      className={`flex justify-between items-center gap-2 hover:text-primaryColor rounded-xl duration-500 py-3 px-6 relative w-full ${
-                        pathname === `/chat/${id}` 
-                          ? "text-white bg-primaryColor" 
-                          : "hover:bg-primaryColor/10"
-                      }`}
-                      key={id}
+            <div className="overflow-y-auto flex-1 scrollbar-hide" ref={chatListRef}>
+              <div className="flex flex-col gap-1 justify-start items-start w-full">
+                {displayedChats.map(({ id, title }, idx) => (
+                  <div
+                    className={`flex justify-between items-center gap-2 hover:text-primaryColor rounded-xl duration-500 py-3 px-6 relative w-full ${
+                      pathname === `/chat/${id}` 
+                        ? "text-white bg-primaryColor" 
+                        : "hover:bg-primaryColor/10"
+                    }`}
+                    key={id}
+                  >
+                    <Link
+                      href={`/chat/${id}`}
+                      className="flex justify-center items-center gap-2"
                     >
-                      <Link
-                        href={`/chat/${id}`}
-                        className="flex justify-center items-center gap-2"
-                      >
-                        <PiAlignLeft size={20} className={pathname === `/chat/${id}` ? "text-white" : "text-primaryColor"} />
-                        <span className="text-sm">
-                          {title.split("").slice(0, 20).join("")}
-                        </span>
-                      </Link>
-                      <button
-                        onClick={() =>
-                          setShowMoreButton(idx === showMoreButton ? NaN : idx)
-                        }
-                      >
-                        <PiDotsThreeBold className="text-xl" />
-                      </button>
-                      <ul
-                        className={`absolute top-9  right-0 bg-white dark:bg-n0 border border-primaryColor/30 p-3 rounded-xl flex flex-col gap-1 justify-start items-start text-sm duration-300 z-40 text-n500 dark:text-n30 ${
-                          showMoreButton === idx
-                            ? "visible translate-y-0 opacity-100 "
-                            : "invisible translate-y-2 opacity-0"
-                        }`}
-                      >
-                        <li className="flex justify-start items-center gap-1 py-2 px-3 rounded-lg border border-transparent hover:border-primaryColor/30  hover:bg-primaryColor/5 duration-300 cursor-pointer w-full">
-                          <PiPencilLine />
-                          <span>Rename</span>
-                        </li>
-                        <li className="flex justify-start items-center gap-1 py-2 px-3 rounded-lg border border-transparent hover:border-primaryColor/30  hover:bg-primaryColor/5 duration-300 cursor-pointer w-full">
-                          <PiShareFat />
-                          <span>Share</span>
-                        </li>
-                        <li className="flex justify-start items-center gap-1 py-2 px-3 rounded-lg border border-transparent hover:border-primaryColor/30  hover:bg-primaryColor/5 duration-300 cursor-pointer w-full">
-                          <PiArchive />
-                          <span>Archive</span>
-                        </li>
-                        <li className="flex justify-start items-center gap-1 py-2 px-3 rounded-lg border border-transparent hover:border-errorColor/30  hover:bg-errorColor/5 duration-300 cursor-pointer text-errorColor w-full">
-                          <PiTrash />
-                          <span>Delete</span>
-                        </li>
-                      </ul>
-                    </div>
-                  ))}
-              </div>
-              <button
-                onClick={() => setShowAllRecentChats((prev) => !prev)}
-                className="flex justify-start items-center gap-2 py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500 w-full"
-              >
-                {showAllRecentChats ? (
-                  <PiCaretUp className="text-xl text-primaryColor" />
-                ) : (
-                  <PiCaretDown className="text-xl text-primaryColor" />
+                      <PiAlignLeft size={20} className={pathname === `/chat/${id}` ? "text-white" : "text-primaryColor"} />
+                      <span className="text-sm">
+                        {title.split("").slice(0, 20).join("")}
+                      </span>
+                    </Link>
+                    <button
+                      onClick={() =>
+                        setShowMoreButton(idx === showMoreButton ? NaN : idx)
+                      }
+                    >
+                      <PiDotsThreeBold className="text-xl" />
+                    </button>
+                    <ul
+                      className={`absolute top-9 right-0 bg-white dark:bg-n0 border border-primaryColor/30 p-3 rounded-xl flex flex-col gap-1 justify-start items-start text-sm duration-300 z-40 text-n500 dark:text-n30 ${
+                        showMoreButton === idx
+                          ? "visible translate-y-0 opacity-100"
+                          : "invisible translate-y-2 opacity-0"
+                      }`}
+                    >
+                      <li className="flex justify-start items-center gap-1 py-2 px-3 rounded-lg border border-transparent hover:border-primaryColor/30 hover:bg-primaryColor/5 duration-300 cursor-pointer w-full">
+                        <PiPencilLine />
+                        <span>Rename</span>
+                      </li>
+                      <li className="flex justify-start items-center gap-1 py-2 px-3 rounded-lg border border-transparent hover:border-primaryColor/30 hover:bg-primaryColor/5 duration-300 cursor-pointer w-full">
+                        <PiShareFat />
+                        <span>Share</span>
+                      </li>
+                      <li className="flex justify-start items-center gap-1 py-2 px-3 rounded-lg border border-transparent hover:border-primaryColor/30 hover:bg-primaryColor/5 duration-300 cursor-pointer w-full">
+                        <PiArchive />
+                        <span>Archive</span>
+                      </li>
+                      <li className="flex justify-start items-center gap-1 py-2 px-3 rounded-lg border border-transparent hover:border-errorColor/30 hover:bg-errorColor/5 duration-300 cursor-pointer text-errorColor w-full">
+                        <PiTrash />
+                        <span>Delete</span>
+                      </li>
+                    </ul>
+                  </div>
+                ))}
+                
+                {/* Loading indicator / load more reference */}
+                {hasMoreChats && (
+                  <div 
+                    ref={loadMoreRef} 
+                    className="w-full py-2 text-center"
+                  >
+                    {isLoadingMore ? (
+                      <div className="w-6 h-6 border-2 border-primaryColor/30 border-t-primaryColor rounded-full animate-spin mx-auto"></div>
+                    ) : (
+                      <div className="text-xs text-slate-400 py-2">Loading more chats...</div>
+                    )}
+                  </div>
                 )}
-                <span className="text-sm font-medium">
-                  {showAllRecentChats ? "Less" : "More"}
-                </span>
-              </button>
+              </div>
             </div>
           </div>
 
-          <div className="">
-            <div className="flex flex-col gap-1 justify-start items-start pb-2 ">
+          {/* Footer section - fixed */}
+          <div className="flex-shrink-0">
+            <div className="flex flex-col gap-1 justify-start items-start pb-2">
               <button
                 className="w-full flex justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
                 onClick={() => modalOpen("Support Modal")}
               >
-                <span className="flex justify-center  items-center gap-2 ">
+                <span className="flex justify-center items-center gap-2">
                   <PiQuestion size={20} className="text-primaryColor" />
                   <span className="text-sm">Support</span>
                 </span>
@@ -250,21 +310,21 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                 className="w-full flex justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
                 onClick={() => modalOpen("Settings")}
               >
-                <span className="flex justify-center  items-center gap-2 ">
+                <span className="flex justify-center items-center gap-2">
                   <PiGear size={20} className="text-primaryColor" />
-                  <span className="text-sm ">Settings</span>
+                  <span className="text-sm">Settings</span>
                 </span>
                 <span className="block size-1 rounded-full bg-successColor"></span>
               </button>
             </div>
 
             <div className="flex justify-between items-center rounded-xl py-3 px-6 bg-primaryColor/5 border border-primaryColor/30">
-              <button className="flex justify-center  items-center gap-2 font-medium   text-primaryColor ">
+              <button className="flex justify-center items-center gap-2 font-medium text-primaryColor">
                 <PiDeviceMobileCamera size={20} className="" />
-                <span className="text-sm ">Get App</span>
+                <span className="text-sm">Get App</span>
               </button>
 
-              <span className="px-3 py-1 rounded-full border bg-secondaryColor/5   border-secondaryColor/30 text-secondaryColor text-xs">
+              <span className="px-3 py-1 rounded-full border bg-secondaryColor/5 border-secondaryColor/30 text-secondaryColor text-xs">
                 New
               </span>
             </div>
