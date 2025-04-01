@@ -1,62 +1,151 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import { useParams, useRouter, usePathname } from "next/navigation";
+import { useChatHandler, Chat } from "@/stores/chatList";
+import Image from "next/image";
 import MyReply from "@/components/chatComponents/MyReply";
-import ChatBox from "@/components/ChatBox";
-import { usePathname } from "next/navigation";
 import BotReply from "@/components/chatComponents/BotReply";
-import { Chat, useChatHandler } from "@/stores/chatList";
+import ChatBox from "@/components/ChatBox";
+import { useAuthStore } from "@/stores/authStore";
 
-function CustomChat() {
+// Simple circular loader component
+const CircularLoader = () => (
+  <div className="w-8 h-8 border-4 border-primaryColor/30 border-t-primaryColor rounded-full animate-spin"></div>
+);
+
+export default function CustomChat() {
+  const { id } = useParams();
+  const pathname = usePathname();
+  const userScrollRef = useRef<boolean>(true);
+  const scrollBoxRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
   const [scroll, setScroll] = useState(false);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  const { chatList, userQuery } = useChatHandler();
-  const path = usePathname();
-  const [currentChat, setCurrentChat] = useState<Chat>();
+  
+  // Get the user for realtime subscriptions
+  const user = useAuthStore((state) => state.user);
 
-  const chatId = path.split("/chat/")[1];
+  // Get chat state and functions
+  const {
+    chatList,
+    updateChatList,
+    currentChatId,
+    setCurrentChatId,
+    fetchUserChatsFromSupabase,
+    streamingMessage,
+    isStreaming,
+    setupRealtime
+  } = useChatHandler();
 
+  // Find the current chat
+  const current = chatList?.find((item) => item.id === id);
+
+  // Effect to create a temporary local chat if not found
   useEffect(() => {
-    const currentChatList = chatList.find(({ id }: { id: string }) => {
-      return id === chatId;
-    });
-    setCurrentChat(currentChatList);
-  }, [chatList, path, chatId]);
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
+    if (!loading && !current && id) {
+      // Create a temporary empty chat while we wait for data
+      const tempChat: Chat = {
+        id: id as string,
+        title: "Loading chat...",
+        messages: []
+      };
+      useChatHandler.setState(state => ({
+        chatList: [tempChat, ...state.chatList],
+      }));
     }
-  }, [userQuery, scroll]);
+  }, [current, loading, id]);
+  
+  // Setup effect
+  useEffect(() => {
+    setLoading(true);
+    // First, set the current chat ID
+    if (id) {
+      setCurrentChatId(id as string);
+      
+      // Setup realtime for this chat
+      setupRealtime(id as string);
+    }
+    
+    // Then fetch user's chats
+    fetchUserChatsFromSupabase().then(() => {
+      setLoading(false);
+    });
+    
+  }, [id, setCurrentChatId, fetchUserChatsFromSupabase, setupRealtime]);
+  
+  // Effect to avoid "Chat not found" flashing before data loads
+  useEffect(() => {
+    if (chatList.length > 0) {
+      const currentChat = chatList.find(chat => chat.id === id);
+      if (currentChat) {
+        setLoading(false);
+      }
+    }
+  }, [chatList, id]);
+
+  // Effect for scrolling
+  useEffect(() => {
+    // Automatically scroll to bottom when new messages are added or during streaming
+    if (scrollBoxRef.current) {
+      const scrollHeight = scrollBoxRef.current.scrollHeight;
+      scrollBoxRef.current.scrollTo({
+        top: scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [chatList, streamingMessage, isStreaming]);
 
   return (
-    <div className=" flex flex-col gap-4 h-full flex-1 overflow-auto w-full z-20 ">
-      <div className="overflow-auto w-full flex-1" ref={chatContainerRef}>
-        <div className={`pb-6  flex-grow  w-full max-w-[1070px] mx-auto `}>
-          <div className="flex gap-3 px-6 relative z-20  w-full flex-col ">
-            {currentChat &&
-              currentChat.messages.map((item, idx) => {
-                return (
-                  <div className="flex flex-col gap-3" key={idx}>
-                    {item.isUser && typeof item.text === "string" && (
-                      <MyReply replyText={item.text} replyTime="3 min ago" />
-                    )}
-
-                    <BotReply
-                      replyType={typeof item.text === "string" ? item.text : ""}
-                      setScroll={setScroll}
-                      isAnimation={userQuery === item.text}
-                    />
-                  </div>
-                );
-              })}
+    <div className=" bg-white h-[calc(100vh-60px)] dark:bg-slate-950 flex flex-col relative w-full">
+      <div
+        ref={scrollBoxRef}
+        className="flex-1 w-full pb-44 lg:pb-44 overflow-auto"
+      >
+        {loading ? (
+          <div className="flex items-center w-full justify-center pt-10">
+            <CircularLoader />
           </div>
-        </div>
+        ) : current ? (
+          <div className="flex flex-col gap-6">
+            {current.messages.map((item, index) => (
+              <div key={index}>
+                {item.isUser ? (
+                  <MyReply 
+                    replyText={typeof item.text === "string" ? item.text : JSON.stringify(item.text)} 
+                    replyTime={new Date(item.timestamp).toLocaleTimeString()}
+                  />
+                ) : (
+                  <BotReply
+                    replyType={typeof item.text === "string" ? item.text : ""}
+                    setScroll={setScroll}
+                    isAnimation={false}
+                    replyTime={new Date(item.timestamp).toLocaleTimeString()}
+                  />
+                )}
+              </div>
+            ))}
+
+            {/* Show streaming response with typing animation */}
+            {isStreaming && streamingMessage && (
+              <BotReply
+                replyType={streamingMessage}
+                setScroll={setScroll}
+                isStreaming={true}
+                isAnimation={false}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center w-full justify-center pt-10">
+            <h1 className="text-3xl font-medium text-slate-300">
+              Chat not found
+            </h1>
+          </div>
+        )}
       </div>
 
-      <ChatBox />
+      <div className="absolute w-full bottom-0 z-30 bg-white dark:bg-slate-950 shadow-lg pb-5">
+        <ChatBox />
+      </div>
     </div>
   );
 }
-
-export default CustomChat;
