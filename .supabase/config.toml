@@ -1,0 +1,7 @@
+# Project configuration
+project_id = "vqssumehiudnzepwnjeq"
+api_url = "https://vqssumehiudnzepwnjeq.supabase.co"
+db_url = "postgresql://postgres:NataDB1@3$5^@db.vqssumehiudnzepwnjeq.supabase.co:5432/postgres"
+studio_url = "https://vqssumehiudnzepwnjeq.supabase.co"
+inbucket_url = "https://vqssumehiudnzepwnjeq.supabase.co"
+storage_url = "https://vqssumehiudnzepwnjeq.supabase.co" 

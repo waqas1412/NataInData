@@ -53,9 +53,15 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
 
   // Helper function to check if a path is active
   const isActive = (path: string) => {
-    if (path === "/new-chat") {
-      return pathname === "/new-chat" || pathname.startsWith("/chat/");
+    // If this is a specific chat link, check if it matches the current path
+    if (path.startsWith("/chat/")) {
+      return pathname === path;
     }
+    // For "General" tab, only make it active if we're on /new-chat page
+    if (path === "/new-chat") {
+      return pathname === "/new-chat";
+    }
+    // For other paths
     return pathname.startsWith(path);
   };
 
@@ -151,15 +157,19 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                   .slice(0, showAllRecentChats ? chatList.length : 6)
                   .map(({ id, title }, idx) => (
                     <div
-                      className="flex justify-between items-center gap-2 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500 py-3 px-6 relative w-full"
+                      className={`flex justify-between items-center gap-2 hover:text-primaryColor rounded-xl duration-500 py-3 px-6 relative w-full ${
+                        pathname === `/chat/${id}` 
+                          ? "text-white bg-primaryColor" 
+                          : "hover:bg-primaryColor/10"
+                      }`}
                       key={id}
                     >
                       <Link
                         href={`/chat/${id}`}
-                        className="flex justify-center items-center gap-2  "
+                        className="flex justify-center items-center gap-2"
                       >
-                        <PiAlignLeft size={20} className="text-primaryColor" />
-                        <span className="text-sm ">
+                        <PiAlignLeft size={20} className={pathname === `/chat/${id}` ? "text-white" : "text-primaryColor"} />
+                        <span className="text-sm">
                           {title.split("").slice(0, 20).join("")}
                         </span>
                       </Link>
