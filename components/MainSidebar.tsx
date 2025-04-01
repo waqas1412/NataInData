@@ -143,9 +143,10 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
         }`}
       >
         <div
-          className="p-5 bg-primaryColor/5 overflow-hidden h-full flex flex-col justify-between"
+          className="p-5 bg-primaryColor/5 h-full flex flex-col"
         >
-          <div className="">
+          {/* Header section - fixed */}
+          <div className="flex-shrink-0">
             <div className="flex justify-between items-center">
               <div className="flex justify-start items-center gap-1.5">
                 <Image src={fav} alt="" />
@@ -205,11 +206,12 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             </div>
           </div>
 
-          <div className="pb-5 flex-1 flex flex-col justify-start items-start w-full overflow-hidden">
-            <p className="text-xs font-semibold text-n700 dark:text-n30">
+          {/* Chat list section - scrollable */}
+          <div className="flex-1 flex flex-col min-h-0 mb-3">
+            <p className="text-xs font-semibold text-n700 dark:text-n30 mb-2">
               Recent
             </p>
-            <div className="flex flex-col gap-1 w-full overflow-auto" ref={chatListRef}>
+            <div className="overflow-y-auto flex-1" ref={chatListRef}>
               <div className="flex flex-col gap-1 justify-start items-start w-full">
                 {displayedChats.map(({ id, title }, idx) => (
                   <div
@@ -280,7 +282,8 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             </div>
           </div>
 
-          <div className="">
+          {/* Footer section - fixed */}
+          <div className="flex-shrink-0">
             <div className="flex flex-col gap-1 justify-start items-start pb-2">
               <button
                 className="w-full flex justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
