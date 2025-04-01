@@ -188,14 +188,14 @@ export const upgradePlanDetails = [
     icon: PiPaperPlaneTilt,
     price: 0,
     features: [
-      "Access to AIQuill mini and reasoning",
+      "Access to Tutor Chatbot mini and reasoning",
       "Standard voice mode",
       "Real-time data from the web with search",
-      "Limited access to AIQuill",
+      "Limited access to Tutor Chatbot",
     ],
     notProvidedFeatures: [
       "Limited access to file uploads, data analysis, and image generation",
-      "Use custom AIQuill",
+      "Use custom Tutor Chatbot",
     ],
   },
   {
@@ -204,13 +204,13 @@ export const upgradePlanDetails = [
     icon: PiAirplaneTilt,
     price: 59,
     features: [
-      "Access to AIQuill mini and reasoning",
+      "Access to Tutor Chatbot mini and reasoning",
       "Standard voice mode",
       "Real-time data from the web with search",
-      "Limited access to AIQuill",
+      "Limited access to Tutor Chatbot",
       "Limited access to file uploads, data analysis, and image generation",
     ],
-    notProvidedFeatures: ["Use custom AIQuill"],
+    notProvidedFeatures: ["Use custom Tutor Chatbot"],
   },
   {
     id: uuidv4(),
@@ -218,12 +218,12 @@ export const upgradePlanDetails = [
     icon: PiRocketLaunch,
     price: 99,
     features: [
-      "Access to AIQuill mini and reasoning",
+      "Access to Tutor Chatbot mini and reasoning",
       "Standard voice mode",
       "Real-time data from the web with search",
-      "Limited access to AIQuill",
+      "Limited access to Tutor Chatbot",
       "Limited access to file uploads, data analysis, and image generation",
-      "Use custom AIQuill",
+      "Use custom Tutor Chatbot",
     ],
     notProvidedFeatures: [],
   },
@@ -232,63 +232,63 @@ export const upgradePlanDetails = [
 export const faqData = [
   {
     id: uuidv4(),
-    question: "What is AIQuill?",
+    question: "What is Tutor Chatbot?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "How does AIQuill work?",
+    question: "How does Tutor Chatbot work?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
     question: "Can I create my own AI chatbot?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "Is coding knowledge required to use AIQuill?",
+    question: "Is coding knowledge required to use Tutor Chatbot?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "What industries can use AIQuill?",
+    question: "What industries can use Tutor Chatbot?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "Does AIQuill support multiple languages?",
+    question: "Does Tutor Chatbot support multiple languages?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "Can I integrate AIQuill with my website or app?",
+    question: "Can I integrate Tutor Chatbot with my website or app?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "Is there a free version of AIQuill?",
+    question: "Is there a free version of Tutor Chatbot?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "How secure is AIQuill?",
+    question: "How secure is Tutor Chatbot?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "How do I get started with AIQuill?",
+    question: "How do I get started with Tutor Chatbot?",
     answer:
-      "Yes! With AIQuill, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
 ];
 
@@ -542,7 +542,7 @@ export const explorePageData = [
       {
         id: uuidv4(),
         title: "Mermaid Chart: diagrams and charts",
-        desc: "Official AIQuill from the Mermaid team. Generate a Mermaid diagram or chart with text including video generator and video editor in one.",
+        desc: "Official Tutor Chatbot from the Mermaid team. Generate a Mermaid diagram or chart with text including video generator and video editor in one.",
         icon: icon2,
       },
       {
@@ -562,7 +562,7 @@ export const explorePageData = [
   {
     id: uuidv4(),
     title: "Trending",
-    desc: "Most popular AIQuill by our community",
+    desc: "Most popular Tutor Chatbot by our community",
     articles: [
       {
         id: uuidv4(),
@@ -579,7 +579,7 @@ export const explorePageData = [
       {
         id: uuidv4(),
         title: "Stay Updated with AI Trends",
-        desc: "Keep up with AI’s fast-paced evolution. Learn about innovations in automation, robotics, and machine learning.",
+        desc: "Keep up with AI's fast-paced evolution. Learn about innovations in automation, robotics, and machine learning.",
         icon: icon7,
       },
       {
@@ -590,13 +590,13 @@ export const explorePageData = [
       },
       {
         id: uuidv4(),
-        title: "AI-Powered Future: What’s Next?",
+        title: "AI-Powered Future: What's Next?",
         desc: "Predict the future of AI-driven technology. Explore innovations in AI-powered assistants, automation, and predictive analytics.",
         icon: icon9,
       },
       {
         id: uuidv4(),
-        title: "AI’s Latest Breakthroughs",
+        title: "AI's Latest Breakthroughs",
         desc: "Get the latest AI news and updates. Learn about groundbreaking research, industry shifts, and revolutionary discoveries.",
         icon: icon10,
       },

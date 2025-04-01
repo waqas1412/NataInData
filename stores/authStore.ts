@@ -12,6 +12,12 @@ interface AuthState {
   setUser: (user: User | null) => void
 }
 
+const getRedirectUrl = () => {
+  // Try to get URL from environment variables
+  const redirectUrl = process.env.NEXT_PUBLIC_REDIRECT_URL || window.location.origin
+  return `${redirectUrl}/new-chat`
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -24,7 +30,7 @@ export const useAuthStore = create<AuthState>()(
             const { error } = await supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
-                redirectTo: `${window.location.origin}/new-chat`,
+                redirectTo: getRedirectUrl(),
                 queryParams: {
                   access_type: 'offline',
                   prompt: 'consent',
@@ -52,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
             const { error } = await supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
-                redirectTo: `${window.location.origin}/new-chat`,
+                redirectTo: getRedirectUrl(),
                 queryParams: {
                   access_type: 'offline',
                   prompt: 'consent',
@@ -67,7 +73,7 @@ export const useAuthStore = create<AuthState>()(
             email,
             password,
             options: {
-              emailRedirectTo: `${window.location.origin}/new-chat`,
+              emailRedirectTo: getRedirectUrl(),
             },
           })
           if (error) throw error

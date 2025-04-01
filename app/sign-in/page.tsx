@@ -58,6 +58,12 @@ function SignIn() {
         </div>
 
         <div className="w-full pt-4">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-semibold mb-2">Sign In</h1>
+            <p className="text-gray-600">
+              Welcome back to Tutor Chatbot
+            </p>
+          </div>
           <p className="text-2xl font-semibold">Welcome Back!</p>
           <p className="text-sm pt-4">Sign in to your account and join us</p>
 

@@ -67,12 +67,12 @@ function UserModal() {
               className="flex justify-start items-center gap-2 p-3 rounded-lg border border-transparent hover:border-primaryColor/30  hover:bg-primaryColor/5 duration-300 cursor-pointer w-full"
             >
               <PiUsers className="text-xl" />
-              <span className="">AIQuill Community</span>
+              <span className="">Tutor Chatbot Community</span>
             </Link>
           </li>
           <li className="flex justify-start items-center gap-2 p-3 rounded-lg border border-transparent hover:border-primaryColor/30  hover:bg-primaryColor/5 duration-300 cursor-pointer w-full">
             <PiPuzzlePiece className="text-xl" />
-            <span className="">Get AIQuill Extension</span>
+            <span className="">Get Tutor Chatbot Extension</span>
           </li>
           <li
             className="flex justify-start items-center gap-2 p-3 rounded-lg border border-transparent hover:border-primaryColor/30  hover:bg-primaryColor/5 duration-300 cursor-pointer w-full"

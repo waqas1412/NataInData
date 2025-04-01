@@ -11,14 +11,17 @@ import Link from "next/link";
 import { useAuthStore } from "@/stores/authStore";
 import { AuthError } from "@supabase/supabase-js";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 function SignUp() {
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuthStore();
+  const router = useRouter();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,8 +30,22 @@ function SignUp() {
     setIsLoading(true);
 
     try {
-      await signUp(userEmail, userPassword);
-      toast.success("Please check your email for confirmation link!");
+      const { error } = await supabase.auth.signUp({
+        email: userEmail,
+        password: userPassword,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_REDIRECT_URL}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success('Confirmation email sent! Please check your inbox.');
+      
+      // Delay redirect for 2 seconds
+      setTimeout(() => {
+        router.push('/sign-in');
+      }, 2000);
     } catch (error) {
       const authError = error as AuthError;
       setIsError(true);
@@ -62,10 +79,8 @@ function SignUp() {
         </div>
 
         <div className="w-full pt-4">
-          <p className="text-2xl font-semibold">Let&apos;s Get Started!</p>
-          <p className="text-sm pt-4">
-            Please Enter your Email Address to Start your Online Application
-          </p>
+          <p className="text-2xl font-semibold">Let&apos;s Get Started</p>
+          <p className="text-sm pt-4">Create an account and join Tutor Chatbot</p>
 
           <form
             onSubmit={handleSubmit}
