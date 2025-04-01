@@ -211,7 +211,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             <p className="text-xs font-semibold text-n700 dark:text-n30 mb-2">
               Recent
             </p>
-            <div className="overflow-y-auto flex-1" ref={chatListRef}>
+            <div className="overflow-y-auto flex-1 scrollbar-hide" ref={chatListRef}>
               <div className="flex flex-col gap-1 justify-start items-start w-full">
                 {displayedChats.map(({ id, title }, idx) => (
                   <div
