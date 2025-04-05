@@ -5,8 +5,6 @@ import {
   PiAlignLeft,
   PiArchive,
   PiArrowUUpLeft,
-  PiCaretDown,
-  PiCaretUp,
   PiChatTeardropText,
   PiDeviceMobileCamera,
   PiDiamondsFour,
@@ -43,7 +41,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   const [showMoreButton, setShowMoreButton] = useState(NaN);
   const { modalOpen } = useMainModal();
   const { chatList } = useChatHandler();
-  const [displayedChats, setDisplayedChats] = useState<Array<any>>([]);
+  const [displayedChats, setDisplayedChats] = useState<Array<{id: string; title: string}>>([]);
   const [page, setPage] = useState(1);
   const [hasMoreChats, setHasMoreChats] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -56,12 +54,38 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   // Initialize chats display
   useEffect(() => {
     if (chatList && chatList.length > 0) {
-      const initialChats = chatList.slice(0, CHATS_PER_PAGE);
+      // Filter out roadmap chats before displaying
+      const filteredChats = chatList.filter(chat => !chat.is_roadmap_chat);
+      const initialChats = filteredChats.slice(0, CHATS_PER_PAGE);
       setDisplayedChats(initialChats);
-      setHasMoreChats(chatList.length > CHATS_PER_PAGE);
+      setHasMoreChats(filteredChats.length > CHATS_PER_PAGE);
       setPage(1);
     }
   }, [chatList]);
+  
+  // Load more chats when scrolling down
+  const loadMoreChats = () => {
+    if (isLoadingMore || !hasMoreChats || !chatList) return;
+    
+    setIsLoadingMore(true);
+    
+    // Filter out roadmap chats before loading more
+    const filteredChats = chatList.filter(chat => !chat.is_roadmap_chat);
+    
+    // Calculate the next batch of chats to load
+    const nextPage = page + 1;
+    const endIdx = nextPage * CHATS_PER_PAGE;
+    const newChats = filteredChats.slice(0, endIdx);
+    
+    // Update state
+    setDisplayedChats(newChats);
+    setPage(nextPage);
+    setHasMoreChats(endIdx < filteredChats.length);
+    
+    setTimeout(() => {
+      setIsLoadingMore(false);
+    }, 300);
+  };
   
   // Setup intersection observer for infinite scroll
   useEffect(() => {
@@ -78,28 +102,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [hasMoreChats, isLoadingMore, chatList]);
-  
-  // Load more chats when scrolling down
-  const loadMoreChats = () => {
-    if (isLoadingMore || !hasMoreChats || !chatList) return;
-    
-    setIsLoadingMore(true);
-    
-    // Calculate the next batch of chats to load
-    const nextPage = page + 1;
-    const endIdx = nextPage * CHATS_PER_PAGE;
-    const newChats = chatList.slice(0, endIdx);
-    
-    // Update state
-    setDisplayedChats(newChats);
-    setPage(nextPage);
-    setHasMoreChats(endIdx < chatList.length);
-    
-    setTimeout(() => {
-      setIsLoadingMore(false);
-    }, 300);
-  };
+  }, [hasMoreChats, isLoadingMore, chatList, loadMoreChats]);
   
   useEffect(() => {
     if (window.innerWidth > 992) {
@@ -182,14 +185,14 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                 <span className="text-sm font-medium">General</span>
               </Link>
               <button
-                onClick={(e) => handleRestrictedNavigation("/ai-generator", e)}
+                onClick={(e) => handleRestrictedNavigation("/roadmap", e)}
                 className={`flex justify-start w-full py-3 px-6 items-center gap-2 rounded-xl transition-colors duration-300 text-left ${
-                  isActive("/ai-generator")
+                  isActive("/roadmap")
                     ? "text-white bg-primaryColor"
                     : "hover:text-primaryColor hover:bg-primaryColor/10"
                 }`}
               >
-                <PiRobot size={20} className={isActive("/ai-generator") ? "" : "text-primaryColor"} />
+                <PiRobot size={20} className={isActive("/roadmap") ? "" : "text-primaryColor"} />
                 <span className="text-sm">Roadmap</span>
               </button>
               <button

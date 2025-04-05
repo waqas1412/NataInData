@@ -32,13 +32,14 @@ function ChatBox() {
   const { hasActiveSubscription } = useSubscriptionStore();
 
   const chatIdUrl = path.includes("/chat/") ? path.split("/chat/")[1] : null;
+  const isRoadmapPage = path === "/roadmap";
 
   // Redirect to the current chat URL if we're on a generic page
   useEffect(() => {
-    if (currentChatId && !chatIdUrl && !path.includes("/new-chat")) {
+    if (currentChatId && !chatIdUrl && !path.includes("/new-chat") && !isRoadmapPage) {
       router.push(`/chat/${currentChatId}`);
     }
-  }, [currentChatId, chatIdUrl, path, router]);
+  }, [currentChatId, chatIdUrl, path, router, isRoadmapPage]);
 
   // Focus input on mount
   useEffect(() => {
@@ -70,22 +71,30 @@ function ChatBox() {
 
     // Handle sending the message
     try {
+      // For roadmap page, use the currentChatId as the target
+      if (isRoadmapPage) {
+        if (currentChatId) {
+          await handleSubmit(userQuery, currentChatId);
+        }
+      } 
       // If we're not on a chat-specific page, we'll create a new chat with a new ID
       // Otherwise, use the current chat ID from the URL
-      const isNewChat = !chatIdUrl;
-      const targetChatId = chatIdUrl || uuidv4();
-      
-      // For new chats, navigate to the chat page first before submitting
-      if (isNewChat && path.includes("/new-chat")) {
-        // Set current chat ID and navigate to the new chat
-        router.push(`/chat/${targetChatId}`);
+      else {
+        const isNewChat = !chatIdUrl;
+        const targetChatId = chatIdUrl || uuidv4();
         
-        // Wait for navigation to complete
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // For new chats, navigate to the chat page first before submitting
+        if (isNewChat && path.includes("/new-chat")) {
+          // Set current chat ID and navigate to the new chat
+          router.push(`/chat/${targetChatId}`);
+          
+          // Wait for navigation to complete
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        // Call submit handler from store (will handle creating/updating chats)
+        await handleSubmit(userQuery, targetChatId);
       }
-      
-      // Call submit handler from store (will handle creating/updating chats)
-      await handleSubmit(userQuery, targetChatId);
       
       // Clear input after sending
       setInputText("");
