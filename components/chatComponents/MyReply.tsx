@@ -10,7 +10,7 @@ function MyReply({ replyTime, replyText }: MyReplyProps) {
   return (
     <div className="flex flex-col justify-end items-end gap-3 px-4">
       <p className="text-xs text-n100">{replyTime}</p>
-      <div className="text-sm bg-infoColor/5 py-3 px-5 border border-infoColor/20 rounded-lg max-w-[90%]">
+      <div className="text-sm bg-infoColor/5 py-3 px-5 border border-infoColor/20 rounded-lg max-w-[75%]">
         <p className="">{replyText}</p>
       </div>
       <div className=" flex justify-end items-center gap-2 cursor-pointer">

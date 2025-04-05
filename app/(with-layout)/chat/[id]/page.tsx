@@ -205,7 +205,7 @@ export default function CustomChat() {
             <CircularLoader />
           </div>
         ) : current ? (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 px-4 md:px-6 mx-auto max-w-[1070px] w-full">
             {/* Loading indicator at the top for infinite scroll */}
             {hasMoreMessages && (
               <div ref={scrollObserverRef} className="w-full py-2 text-center">

@@ -192,7 +192,7 @@ export default function RoadmapPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-6 p-4">
+          <div className="flex flex-col gap-6 px-4 md:px-6 mx-auto max-w-[1070px] w-full">
             {/* Display welcome message if no messages yet */}
             {displayedMessages.length === 0 && (
               <BotReply

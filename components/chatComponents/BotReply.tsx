@@ -149,7 +149,7 @@ export default function BotReply({
       <Image src={logo} alt="" className="max-sm:size-5 object-cover" />
       <div className="flex flex-col justify-start items-start gap-3 flex-1">
         <p className="text-xs text-n100">Tutor Chatbot, {isStreaming ? new Date().toLocaleTimeString() : replyTime || new Date().toLocaleTimeString()}</p>
-        <div className="text-sm bg-primaryColor/5 py-3 px-5 border border-primaryColor/20 rounded-lg w-full sm:max-w-[90%]">
+        <div className="text-sm bg-primaryColor/5 py-3 px-5 border border-primaryColor/20 rounded-lg w-full max-w-[75%]">
           {isStreaming ? (
             // Streaming content display
             <div className="whitespace-pre-wrap">
