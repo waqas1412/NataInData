@@ -41,9 +41,22 @@ export default function CustomChat() {
   // Initialize message loading
   useEffect(() => {
     if (current && current.messages.length > 0) {
+      // Deduplicate messages by content and user
+      const uniqueMessages = current.messages.reduce((acc: ChatMessagesType[], curr) => {
+        // Only add message if it doesn't already exist by content
+        if (!acc.some(msg => 
+          typeof msg.text === typeof curr.text && 
+          msg.text === curr.text && 
+          msg.isUser === curr.isUser
+        )) {
+          acc.push(curr);
+        }
+        return acc;
+      }, []);
+      
       // Get most recent messages first (in reverse order for display)
-      const totalMessages = current.messages.length;
-      const initialMessages = current.messages.slice(
+      const totalMessages = uniqueMessages.length;
+      const initialMessages = uniqueMessages.slice(
         Math.max(0, totalMessages - MESSAGES_PER_PAGE),
         totalMessages
       );
@@ -124,13 +137,26 @@ export default function CustomChat() {
     const scrollContainer = scrollBoxRef.current;
     const scrollPosition = scrollContainer?.scrollHeight || 0;
     
+    // Deduplicate messages first
+    const uniqueMessages = current.messages.reduce((acc: ChatMessagesType[], curr) => {
+      // Only add message if it doesn't already exist by content
+      if (!acc.some(msg => 
+        typeof msg.text === typeof curr.text && 
+        msg.text === curr.text && 
+        msg.isUser === curr.isUser
+      )) {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+    
     // Calculate the next batch of messages to load
-    const totalMessages = current.messages.length;
+    const totalMessages = uniqueMessages.length;
     const nextPage = page + 1;
     const startIdx = Math.max(0, totalMessages - (nextPage * MESSAGES_PER_PAGE));
     const endIdx = Math.max(0, totalMessages - ((page) * MESSAGES_PER_PAGE));
     
-    const newMessages = current.messages.slice(startIdx, endIdx);
+    const newMessages = uniqueMessages.slice(startIdx, endIdx);
     
     // Add new messages to the beginning of the displayed messages
     setDisplayedMessages(prev => [...newMessages, ...prev]);

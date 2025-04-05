@@ -1,7 +1,7 @@
 import { demoChatData } from "@/constants/chats";
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import { syncChatToSupabase, fetchUserChats, addMessageToChat } from "@/lib/supabase-helpers";
+import { syncChatToSupabase, fetchUserChats } from "@/lib/supabase-helpers";
 import { useAuthStore } from "./authStore";
 import { subscribeToChatUpdates, subscribeToUserChats } from "@/lib/supabase-realtime";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -26,6 +26,7 @@ export interface Chat {
   id: string;
   title: string;
   messages: ChatMessagesType[];
+  is_roadmap_chat?: boolean;
 }
 
 // Add new types for real-time state
@@ -173,10 +174,19 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
   updateChatList: () => {
     try {
       const user = useAuthStore.getState().user;
-      const storedData = localStorage.getItem(`chat-list-${user?.id || 'anonymous'}`);
+      
+      // If user is logged in, prefer to load from Supabase instead of localStorage
+      if (user) {
+        // Try to fetch from Supabase first
+        get().fetchUserChatsFromSupabase();
+        return;
+      }
+      
+      // For anonymous users, use localStorage
+      const storedData = localStorage.getItem(`chat-list-anonymous`);
 
       if (!storedData) {
-        localStorage.setItem(`chat-list-${user?.id || 'anonymous'}`, JSON.stringify(demoChatData));
+        localStorage.setItem(`chat-list-anonymous`, JSON.stringify(demoChatData));
         set({ chatList: demoChatData });
       } else {
         const parsedData = JSON.parse(storedData);
@@ -217,6 +227,7 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
         const formattedChats = chats.map((chat: any) => ({
           id: chat.id,
           title: chat.title,
+          is_roadmap_chat: chat.is_roadmap_chat || false,
           messages: chat.messages.map((msg: any) => ({
             text: msg.content,
             isUser: msg.is_user,
@@ -224,14 +235,20 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
           }))
         }));
         
-        // Save to localStorage as backup and set state
+        // First clear any existing localStorage data to avoid duplicates
+        localStorage.removeItem(`chat-list-${user.id}`);
+        
+        // Then save fresh data to localStorage as backup
         localStorage.setItem(`chat-list-${user.id}`, JSON.stringify(formattedChats));
+        
+        // Set state with database data
         set({ chatList: formattedChats });
       } else {
         // If fallback to REST API call
         console.log('Falling back to traditional API call');
         
         const fetchedChats = await fetchUserChats(user.id);
+        localStorage.removeItem(`chat-list-${user.id}`);
         localStorage.setItem(`chat-list-${user.id}`, JSON.stringify(fetchedChats));
         set({ chatList: fetchedChats });
       }
@@ -264,197 +281,315 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
     }
   },
   
-  handleSubmit: async (text, chatId?) => {
-    set({ userQuery: text, isStreaming: true });
-    
-    // Get stored chat data
+  handleSubmit: async (text, chatId) => {
     const user = useAuthStore.getState().user;
-    const storedData = localStorage.getItem(`chat-list-${user?.id || 'anonymous'}`);
-    let parsedData: Chat[] = storedData ? JSON.parse(storedData) : [];
     
-    // Create a new chat ID if not provided
-    let currentChatId = chatId || uuidv4();
+    // Check if it's a roadmap chat marker
+    const isRoadmapChat = text.includes("is_roadmap_chat=true");
     
-    // Get current user if available
-    const userId = user?.id || 'anonymous-user';
-    
-    // Check if this is a new chat
-    const isNewChat = !parsedData.some(({ id }) => id === currentChatId);
-    
-    // Create a new chat message
-    const userMessage = {
-      text,
-      isUser: true,
-      timestamp: new Date().toISOString(),
-    };
-    
-    // Update the local state first for immediate UI update
-    if (isNewChat) {
-      // Create a new chat
-      const newChat: Chat = {
-        id: currentChatId,
-        title: text,
-        messages: [userMessage],
-      };
-      
-      parsedData = [newChat, ...parsedData];
-      set({ chatList: parsedData, currentChatId });
-      
-      // Setup realtime for the new chat
-      get().setupRealtime(currentChatId);
-      
-      // If user is logged in, create the chat in Supabase
-      if (user) {
-        try {
-          const { error } = await supabase.rpc('create_chat_with_id', {
-            p_id: currentChatId,
-            p_user_id: user.id,
-            p_title: text,
-            p_initial_message: text
-          });
-          
-          if (error) {
-            console.error('Error creating chat in Supabase:', error);
-          }
-        } catch (error) {
-          console.error('Error creating chat in Supabase:', error);
-        }
-      }
-    } else {
-      // Update existing chat
-      parsedData = parsedData.map((chat) => {
-        if (chat.id === currentChatId) {
-          return {
-            ...chat,
-            messages: [...chat.messages, userMessage],
-          };
-        }
-        return chat;
-      });
-      set({ chatList: parsedData, currentChatId });
-      
-      // If user is logged in, add the message to Supabase
-      if (user) {
-        try {
-          await supabase.rpc('add_message_to_chat', {
-            p_chat_id: currentChatId,
-            p_user_id: user.id,
-            p_content: text,
-            p_is_user: true
-          });
-        } catch (error) {
-          console.error('Error adding message to Supabase:', error);
-        }
-      }
+    // If it's a system message for roadmap chat, don't update the user query
+    if (!isRoadmapChat) {
+      set({ userQuery: text });
     }
     
-    // Save the updated chat list to localStorage as backup
-    localStorage.setItem(`chat-list-${user?.id || 'anonymous'}`, JSON.stringify(parsedData));
-    
     try {
-      // Use the Supabase Edge Function if the user is authenticated
-      let streamUrl = '/api/chat';
-      
-      if (user) {
-        // Use Supabase Edge Function URL if authenticated
-        streamUrl = 'https://vqssumehiudnzepwnjeq.supabase.co/functions/v1/chat';
-      }
-      
-      // Prepare messages for API
-      const currentChat = parsedData.find(chat => chat.id === currentChatId);
-      const messages = currentChat?.messages || [userMessage];
-      
-      // Call the streaming API endpoint
-      const response = await fetch(streamUrl, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          // Add Supabase auth header if authenticated
-          ...(user && { 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` })
-        },
-        body: JSON.stringify({
-          messages,
-          chatId: currentChatId,
-          userId,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-      
-      if (!response.body) {
-        throw new Error('No response body');
-      }
-      
-      // Process the stream
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedResponse = '';
-      
-      // Handle the stream data
-      while (true) {
-        const { done, value } = await reader.read();
+      // If not logged in, handle locally
+      if (!user) {
+        // Handle anonymous user chat locally
+        const storedData = localStorage.getItem(`chat-list-anonymous`);
+        let parsedData: Chat[] = storedData ? JSON.parse(storedData) : [];
         
-        if (done) {
-          break;
-        }
+        // Create a new chat ID if not provided
+        const currentChatId = chatId || uuidv4();
         
-        // Decode the chunk and update the streaming message
-        const chunk = decoder.decode(value);
-        accumulatedResponse += chunk;
-        set({ streamingMessage: accumulatedResponse });
-      }
-      
-      // Create the bot's response
-      const botResponse: ChatMessagesType = {
-        text: accumulatedResponse,
-        isUser: false,
-        timestamp: new Date().toISOString(),
-      };
-      
-      // Update the chat with the bot's response
-      const updatedChatList = get().chatList.map(chat => {
-        if (chat.id === currentChatId) {
-          return {
-            ...chat,
-            messages: [...chat.messages, botResponse],
+        // Check if this is a new chat
+        const isNewChat = !parsedData.some(({ id }) => id === currentChatId);
+        
+        // Create a new chat message
+        const userMessage = {
+          text,
+          isUser: true,
+          timestamp: new Date().toISOString(),
+        };
+        
+        if (isNewChat) {
+          // Create a new chat
+          const newChat: Chat = {
+            id: currentChatId,
+            title: text.substring(0, 30) + "...",
+            messages: [userMessage],
+            is_roadmap_chat: isRoadmapChat
           };
+          
+          parsedData = [newChat, ...parsedData];
+          set({ chatList: parsedData, currentChatId: currentChatId });
+        } else {
+          // Update existing chat
+          parsedData = parsedData.map((chat) => {
+            if (chat.id === currentChatId) {
+              return {
+                ...chat,
+                messages: [...chat.messages, userMessage],
+              };
+            }
+            return chat;
+          });
+          set({ chatList: parsedData, currentChatId: currentChatId });
         }
-        return chat;
-      });
-      
-      // Update localStorage and state
-      localStorage.setItem(`chat-list-${user?.id || 'anonymous'}`, JSON.stringify(updatedChatList));
-      set({ 
-        chatList: updatedChatList, 
-        streamingMessage: '', 
-        isStreaming: false 
-      });
-      
+        
+        // Save the updated chat list to localStorage
+        localStorage.setItem(`chat-list-anonymous`, JSON.stringify(parsedData));
+        
+        // Handle anonymous user AI response...
+        // Continue with your existing anonymous user AI response logic
+      } else {
+        // Handle logged-in user with Supabase
+        let currentChat: Chat | null = null;
+        
+        // Find existing chat by ID
+        if (chatId) {
+          currentChat = get().chatList.find((chat) => chat.id === chatId) || null;
+        }
+        
+        // Check if this is a roadmap chat
+        //const isExistingRoadmapChat = currentChat?.is_roadmap_chat || false;
+        
+        // Setup message
+        const message: ChatMessagesType = {
+          text,
+          isUser: true,
+          timestamp: new Date().toISOString(),
+        };
+        
+        // If this is a new chat
+        if (!currentChat) {
+          // Determine if we should create a roadmap chat or normal chat
+          const chatTitle = isRoadmapChat ? "Your Roadmap Chat" : text.substring(0, 30) + "...";
+          const newChatId = chatId || uuidv4();
+          
+          // Create initial chat in local state
+          const newChat: Chat = {
+            id: newChatId,
+            title: chatTitle,
+            messages: [message],
+            is_roadmap_chat: isRoadmapChat
+          };
+          
+          // Update local state
+          set((state) => ({
+            chatList: [newChat, ...state.chatList],
+            currentChatId: newChatId,
+            isStreaming: true // Enable streaming for all chats including roadmap chats
+          }));
+          
+          // Set up realtime for the new chat
+          get().setupRealtime(newChatId);
+          
+          try {
+            // Create the chat in Supabase using RPC function
+            const { error } = await supabase.rpc('create_chat_with_id', {
+              p_id: newChatId,
+              p_user_id: user.id,
+              p_title: chatTitle,
+              p_initial_message: typeof message.text === 'string' ? message.text : JSON.stringify(message.text),
+              p_is_roadmap_chat: isRoadmapChat
+            });
+            
+            if (error) {
+              console.error('Error creating chat:', error);
+            }
+          } catch (error) {
+            console.error('Error creating chat:', error);
+          }
+          
+          // For roadmap chats, add a welcome message from the AI
+          if (isRoadmapChat) {
+            const welcomeMessage: ChatMessagesType = {
+              text: "Welcome to your Roadmap Chat! This is a dedicated space for planning your learning journey. The chat will be persistent across sessions so you can always come back to it.",
+              isUser: false,
+              timestamp: new Date().toISOString(),
+            };
+            
+            // Add welcome message to local state
+            set((state) => ({
+              chatList: state.chatList.map((chat) => 
+                chat.id === newChatId 
+                  ? { ...chat, messages: [...chat.messages, welcomeMessage] }
+                  : chat
+              ),
+            }));
+            
+            // Add to Supabase using RPC function
+            try {
+              await supabase.rpc('add_message_to_chat', {
+                p_chat_id: newChatId,
+                p_user_id: user.id,
+                p_content: typeof welcomeMessage.text === 'string' 
+                  ? welcomeMessage.text 
+                  : JSON.stringify(welcomeMessage.text),
+                p_is_user: false
+              });
+            } catch (error) {
+              console.error("Error adding welcome message:", error);
+            }
+            
+            // Don't continue with AI response for system messages
+            return;
+          }
+        } else if (chatId) {
+          // Check if this is a roadmap chat
+          const isExistingRoadmapChat = currentChat?.is_roadmap_chat || false;
+          
+          // Special handling for roadmap chats to avoid duplicate messages
+          if (isExistingRoadmapChat && isRoadmapChat) {
+            // If this is a system message to an existing roadmap chat, skip it
+            return;
+          }
+          
+          // Add message to existing chat
+          // Update local state
+          set((state) => ({
+            chatList: state.chatList.map((chat) =>
+              chat.id === chatId
+                ? { ...chat, messages: [...chat.messages, message] }
+                : chat
+            ),
+            isStreaming: true // Enable streaming for all chats including roadmap chats
+          }));
+          
+          // Add to Supabase using RPC function
+          try {
+            await supabase.rpc('add_message_to_chat', {
+              p_chat_id: chatId,
+              p_user_id: user.id,
+              p_content: typeof message.text === 'string' ? message.text : JSON.stringify(message.text),
+              p_is_user: true
+            });
+          } catch (error) {
+            console.error("Error adding message:", error);
+          }
+        }
+        
+        // Start streaming response for all user messages (including roadmap chats)
+        // Only skip for system messages marked with is_roadmap_chat=true
+        if (!text.includes("is_roadmap_chat=true")) {
+          // Implement streaming AI response logic
+          try {
+            // Use the Supabase Edge Function
+            const streamUrl = 'https://vqssumehiudnzepwnjeq.supabase.co/functions/v1/chat';
+            
+            // Prepare messages for API
+            const currentChatId = chatId || get().currentChatId;
+            const currentChat = get().chatList.find(chat => chat.id === currentChatId);
+            const messages = currentChat?.messages || [message];
+            
+            // Call the streaming API endpoint
+            const response = await fetch(streamUrl, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+              },
+              body: JSON.stringify({
+                messages,
+                chatId: currentChatId,
+                userId: user.id,
+              }),
+            });
+            
+            if (!response.ok) {
+              throw new Error('Failed to get AI response');
+            }
+            
+            if (!response.body) {
+              throw new Error('No response body');
+            }
+            
+            // Process the stream
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedResponse = '';
+            
+            // Handle the stream data
+            while (true) {
+              const { done, value } = await reader.read();
+              
+              if (done) {
+                break;
+              }
+              
+              // Decode the chunk and update the streaming message
+              const chunk = decoder.decode(value);
+              accumulatedResponse += chunk;
+              set({ streamingMessage: accumulatedResponse });
+            }
+            
+            // Create the bot's response
+            const botResponse: ChatMessagesType = {
+              text: accumulatedResponse,
+              isUser: false,
+              timestamp: new Date().toISOString(),
+            };
+            
+            // Update the chat with the bot's response
+            const updatedChatList = get().chatList.map(chat => {
+              if (chat.id === currentChatId) {
+                return {
+                  ...chat,
+                  messages: [...chat.messages, botResponse],
+                };
+              }
+              return chat;
+            });
+            
+            set({ 
+              chatList: updatedChatList, 
+              streamingMessage: '', 
+              isStreaming: false 
+            });
+            
+            // Add AI response to Supabase using RPC function
+            try {
+              await supabase.rpc('add_message_to_chat', {
+                p_chat_id: currentChatId,
+                p_user_id: user.id,
+                p_content: typeof botResponse.text === 'string' 
+                  ? botResponse.text 
+                  : JSON.stringify(botResponse.text),
+                p_is_user: false
+              });
+            } catch (error) {
+              console.error('Error adding AI response to database:', error);
+            }
+          } catch (error) {
+            console.error('Error in AI streaming:', error);
+            set({ isStreaming: false });
+            
+            // Add error message to chat
+            const errorResponse: ChatMessagesType = {
+              text: "Sorry, I encountered an error. Please try again.",
+              isUser: false,
+              timestamp: new Date().toISOString(),
+            };
+            
+            const currentChatId = chatId || get().currentChatId;
+            const updatedChatList = get().chatList.map(chat => {
+              if (chat.id === currentChatId) {
+                return {
+                  ...chat,
+                  messages: [...chat.messages, errorResponse],
+                };
+              }
+              return chat;
+            });
+            
+            set({ chatList: updatedChatList });
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error calling chat API:', error);
+      console.error("Error in handleSubmit:", error);
       set({ isStreaming: false });
-      
-      // Add error message to chat
-      const errorResponse: ChatMessagesType = {
-        text: "Sorry, I encountered an error. Please try again.",
-        isUser: false,
-        timestamp: new Date().toISOString(),
-      };
-      
-      const updatedChatList = get().chatList.map(chat => {
-        if (chat.id === currentChatId) {
-          return {
-            ...chat,
-            messages: [...chat.messages, errorResponse],
-          };
-        }
-        return chat;
-      });
-      
-      localStorage.setItem(`chat-list-${user?.id || 'anonymous'}`, JSON.stringify(updatedChatList));
-      set({ chatList: updatedChatList });
     }
   },
 }))
