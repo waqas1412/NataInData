@@ -31,8 +31,8 @@ export default {
         n500: "#434956",
         n700: "#262D3B",
 
-        primaryColor: "rgb(77, 107, 254)",
-        secondaryColor: "rgb(142, 51, 255)",
+        primaryColor: "rgb(244, 123, 32)",
+        secondaryColor: "rgba(244, 123, 32, 0.8)",
         errorColor: "rgb(255, 86, 48)",
         warningColor: "rgb(255, 171, 0)",
         successColor: "rgb(34, 197, 94)",

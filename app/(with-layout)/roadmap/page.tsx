@@ -166,7 +166,7 @@ export default function RoadmapPage() {
   }, [chatList, roadmapChatId, displayedMessages]);
 
   return (
-    <div className="bg-white h-[calc(100vh-60px)] dark:bg-slate-950 flex flex-col relative w-full">
+    <div className="bg-white h-[calc(100vh-60px)] dark:bg-[#1A1915] flex flex-col relative w-full">
       <div className="py-6 px-4 border-b border-gray-200 dark:border-gray-800">
         <h1 className="text-2xl font-semibold">Roadmap</h1>
         <p className="text-gray-600 dark:text-gray-400">Your personalized learning journey</p>
@@ -235,7 +235,7 @@ export default function RoadmapPage() {
       </div>
 
       {user && (
-        <div className="absolute w-full bottom-0 z-30 bg-white dark:bg-slate-950 shadow-lg pb-5">
+        <div className="absolute w-full bottom-0 z-30 bg-white dark:bg-[#1A1915] shadow-lg pb-5">
           <ChatBox />
         </div>
       )}

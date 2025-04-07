@@ -49,7 +49,7 @@ function UpgradeModal() {
           ))}
 
           <div className="flex justify-between items-center">
-            <p className="text-sm font-semibold">Advanced Tutor Chatbot</p>
+            <p className="text-sm font-semibold">Advanced Data Tutor</p>
             <Link
               href={"/upgrade-plan"}
               className="bg-primaryColor rounded-full text-white py-2 px-4 text-xs"
