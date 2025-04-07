@@ -1,14 +1,8 @@
-import { useChatHandler } from "@/stores/chatList";
-import { usePathname, useRouter } from "next/navigation";
 import React, { FormEvent, useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
-import {
-  PiArrowUp,
-  PiLightbulb,
-  PiMagnifyingGlass,
-  PiMicrophone,
-  PiPaperclip,
-} from "react-icons/pi";
+import { PiArrowUp, PiLightbulb } from "react-icons/pi";
+import { useChatHandler } from "@/stores/chatList";
+import { usePathname, useRouter } from "next/navigation";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import dynamic from "next/dynamic";
 
@@ -122,7 +116,7 @@ function ChatBox() {
             <input
               ref={inputRef}
               className="w-full outline-none p-4 bg-transparent"
-              placeholder={isStreaming ? "AI is generating a response..." : "Message Tutor Chatbot..."}
+              placeholder={isStreaming ? "AI is generating a response..." : "Message Data Tutor..."}
               value={inputText}
               onChange={(e) => {
                 setUserQuery(e.target.value);
@@ -134,25 +128,25 @@ function ChatBox() {
 
           <div className="flex justify-between items-center pt-4">
             <div className="flex justify-start items-center gap-3">
-              <button 
+              {/* <button 
                 type="button"
                 className="flex justify-center items-center gap-2 py-2 px-2 sm:px-4 rounded-full border border-secondaryColor/20 bg-secondaryColor/5"
               >
                 <PiMagnifyingGlass className="text-secondaryColor" />
                 <span className="text-xs font-medium max-sm:hidden">Search</span>
-              </button>
+              </button> */}
               <button 
                 type="button"
                 className="flex justify-center items-center gap-2 py-2 px-2 sm:px-4 rounded-full border border-warningColor/30 bg-warningColor/5"
               >
                 <PiLightbulb className="text-warningColor" />
                 <span className="text-xs font-medium max-sm:hidden">
-                  Brainstorm
+                Press 🔈 to hear voiceover from me, Nataindata
                 </span>
               </button>
             </div>
             <div className="flex justify-end items-center gap-3">
-              <button 
+              {/* <button 
                 type="button"
                 className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 dark:bg-n0"
               >
@@ -163,7 +157,7 @@ function ChatBox() {
                 className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 dark:bg-n0"
               >
                 <PiPaperclip />
-              </button>
+              </button> */}
               <button
                 type="submit"
                 className={`${

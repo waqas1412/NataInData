@@ -166,10 +166,12 @@ function CustomDetailsModal() {
             </div>
             <div className=" flex-1 flex justify-start items-start flex-col">
               <p className="text-lg font-medium">
-                Mermaid Chart: diagrams and charts
+                Official Data Tutor from the Mermaid team. Generate a Mermaid
+                diagram or chart with text prompt. Paste Mermaid code to
+                render a diagram. Read more at
               </p>
               <p className="text-n50 text-sm">
-                Official Tutor Chatbot from the Mermaid team. Generate a Mermaid
+                Official Data Tutor from the Mermaid team. Generate a Mermaid
                 diagram or chart with text prompt. Paste Mermaid code to
                 render a diagram. Read more at
               </p>

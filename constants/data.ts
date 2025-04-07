@@ -1,35 +1,26 @@
 import {
   PiAirplaneTilt,
   PiClipboardText,
-  PiCode,
   PiCodeFill,
   PiEnvelopeSimple,
   PiFileText,
   PiFire,
   PiGear,
-  PiGraduationCap,
   PiGraduationCapFill,
-  PiImage,
   PiImageFill,
-  PiImageSquare,
   PiImageSquareFill,
   PiLaptop,
   PiLock,
   PiLockKey,
-  PiMagicWand,
-  PiMegaphone,
   PiMoon,
   PiPaintBrushHousehold,
   PiPaperPlaneTilt,
   PiPath,
-  PiPencilSimpleLine,
   PiQuestion,
   PiRobot,
   PiRocketLaunch,
-  PiSpeakerHigh,
   PiSpeakerHighFill,
   PiSun,
-  PiVideo,
   PiVideoCameraFill,
 } from "react-icons/pi";
 import { v4 as uuidv4 } from "uuid";
@@ -72,73 +63,59 @@ import monday from "@/public/images/monday.png";
 export const chatOptions = [
   {
     id: uuidv4(),
-    name: "Image Generator",
-    label: "image",
-    icon: PiImage,
-    color: "77, 107, 254",
+    name: "AI agents in Data Engineering",
+    label: "AI agents in Data Engineering",
+    icon: PiRobot,
+    color: "244, 123, 32",
   },
   {
     id: uuidv4(),
-    name: "Video Generator",
-    label: "video",
-    icon: PiVideo,
-    color: "142, 51, 255",
+    name: "Advanced SQL topics",
+    label: "Advanced SQL topics",
+    icon: PiCodeFill,
+    color: "244, 123, 32",
   },
   {
     id: uuidv4(),
-    name: "Audio Generator",
-    label: "audio",
-    icon: PiSpeakerHigh,
-    color: "255, 86, 48",
+    name: "Relational vs. Graph databases",
+    label: "Relational vs. Graph databases",
+    icon: PiPath,
+    color: "244, 123, 32",
   },
   {
     id: uuidv4(),
-    name: "Photo Editor",
-    label: "retouch",
-    icon: PiImageSquare,
-    color: "255, 171, 0",
+    name: "Future of Data Engineering",
+    label: "Future of Data Engineering",
+    icon: PiRocketLaunch,
+    color: "244, 123, 32",
   },
   {
     id: uuidv4(),
-    name: "Education Feedback",
-    label: "data-table",
-    icon: PiGraduationCap,
-    color: "34, 197, 94",
+    name: "Schema design best practices",
+    label: "Schema design best practices",
+    icon: PiGear,
+    color: "244, 123, 32",
   },
   {
     id: uuidv4(),
-    name: "Get Advice",
-    label: "text",
-    icon: PiMegaphone,
-    color: "255, 86, 48",
+    name: "What is CDC?",
+    label: "What is CDC?",
+    icon: PiClipboardText,
+    color: "244, 123, 32",
   },
   {
     id: uuidv4(),
-    name: "Code Generator",
-    label: "code",
-    icon: PiCode,
-    color: "34, 197, 94",
+    name: "Airflow best practices",
+    label: "Airflow best practices",
+    icon: PiAirplaneTilt,
+    color: "244, 123, 32",
   },
   {
     id: uuidv4(),
-    name: "Help me write",
-    label: "text",
-    icon: PiPencilSimpleLine,
-    color: "77, 107, 254",
-  },
-  {
-    id: uuidv4(),
-    name: "Summarize text",
-    label: "text",
-    icon: PiMagicWand,
-    color: "255, 86, 48",
-  },
-  {
-    id: uuidv4(),
-    name: "Problem solving",
-    label: "code",
-    icon: PiQuestion,
-    color: "142, 51, 255",
+    name: "SQL performance bottlenecks",
+    label: "SQL performance bottlenecks",
+    icon: PiFire,
+    color: "244, 123, 32",
   },
 ];
 
@@ -188,14 +165,14 @@ export const upgradePlanDetails = [
     icon: PiPaperPlaneTilt,
     price: 0,
     features: [
-      "Access to Tutor Chatbot mini and reasoning",
+      "Access to Data Tutor mini and reasoning",
       "Standard voice mode",
       "Real-time data from the web with search",
-      "Limited access to Tutor Chatbot",
+      "Limited access to Data Tutor",
     ],
     notProvidedFeatures: [
       "Limited access to file uploads, data analysis, and image generation",
-      "Use custom Tutor Chatbot",
+      "Use custom Data Tutor",
     ],
   },
   {
@@ -204,13 +181,13 @@ export const upgradePlanDetails = [
     icon: PiAirplaneTilt,
     price: 59,
     features: [
-      "Access to Tutor Chatbot mini and reasoning",
+      "Access to Data Tutor mini and reasoning",
       "Standard voice mode",
       "Real-time data from the web with search",
-      "Limited access to Tutor Chatbot",
+      "Limited access to Data Tutor",
       "Limited access to file uploads, data analysis, and image generation",
     ],
-    notProvidedFeatures: ["Use custom Tutor Chatbot"],
+    notProvidedFeatures: ["Use custom Data Tutor"],
   },
   {
     id: uuidv4(),
@@ -218,12 +195,12 @@ export const upgradePlanDetails = [
     icon: PiRocketLaunch,
     price: 99,
     features: [
-      "Access to Tutor Chatbot mini and reasoning",
+      "Access to Data Tutor mini and reasoning",
       "Standard voice mode",
       "Real-time data from the web with search",
-      "Limited access to Tutor Chatbot",
+      "Limited access to Data Tutor",
       "Limited access to file uploads, data analysis, and image generation",
-      "Use custom Tutor Chatbot",
+      "Use custom Data Tutor",
     ],
     notProvidedFeatures: [],
   },
@@ -232,63 +209,63 @@ export const upgradePlanDetails = [
 export const faqData = [
   {
     id: uuidv4(),
-    question: "What is Tutor Chatbot?",
+    question: "What is Data Tutor?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "How does Tutor Chatbot work?",
+    question: "How does Data Tutor work?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
     question: "Can I create my own AI chatbot?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "Is coding knowledge required to use Tutor Chatbot?",
+    question: "Is coding knowledge required to use Data Tutor?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "What industries can use Tutor Chatbot?",
+    question: "What industries can use Data Tutor?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "Does Tutor Chatbot support multiple languages?",
+    question: "Does Data Tutor support multiple languages?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "Can I integrate Tutor Chatbot with my website or app?",
+    question: "Can I integrate Data Tutor with my website or app?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "Is there a free version of Tutor Chatbot?",
+    question: "Is there a free version of Data Tutor?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "How secure is Tutor Chatbot?",
+    question: "How secure is Data Tutor?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
   {
     id: uuidv4(),
-    question: "How do I get started with Tutor Chatbot?",
+    question: "How do I get started with Data Tutor?",
     answer:
-      "Yes! With Tutor Chatbot, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
+      "Yes! With Data Tutor, you can design and customize your chatbot, set response patterns, and integrate it into websites or applications.",
   },
 ];
 
@@ -542,7 +519,7 @@ export const explorePageData = [
       {
         id: uuidv4(),
         title: "Mermaid Chart: diagrams and charts",
-        desc: "Official Tutor Chatbot from the Mermaid team. Generate a Mermaid diagram or chart with text including video generator and video editor in one.",
+        desc: "Official Data Tutor from the Mermaid team. Generate a Mermaid diagram or chart with text including video generator and video editor in one.",
         icon: icon2,
       },
       {
@@ -562,7 +539,7 @@ export const explorePageData = [
   {
     id: uuidv4(),
     title: "Trending",
-    desc: "Most popular Tutor Chatbot by our community",
+    desc: "Most popular Data Tutor by our community",
     articles: [
       {
         id: uuidv4(),

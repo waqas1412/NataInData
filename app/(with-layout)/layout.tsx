@@ -16,14 +16,14 @@ function Layout({ children }: { children: React.ReactNode }) {
   }, [updateChatList]);
 
   return (
-    <div className="text-n500 bg-white relative z-10 h-dvh overflow-hidden dark:bg-n0 dark:text-n30">
+    <div className="text-n500 bg-white relative z-10 h-dvh overflow-hidden dark:bg-[#1A1915] dark:text-n30">
       <GradientBackground />
       <div className="flex justify-start items-start h-full ">
         <MainSidebar
           showSidebar={showSidebar}
           setShowSidebar={setShowSidebar}
         />
-        <div className="flex-1 flex flex-col gap-3 justify-between items-center h-full pb-3 relative z-20">
+        <div className="flex-1 flex flex-col justify-between items-center h-full pb-3 relative z-20">
           <Header showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
           {children}
           <Footer />

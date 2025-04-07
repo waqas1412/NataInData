@@ -7,14 +7,9 @@ import BotTableReply from "./BotTableReply";
 import { TypeAnimation } from "react-type-animation";
 import logo from "@/public/images/favicon.png";
 import {
-  PiArrowsCounterClockwise,
   PiChecks,
-  PiCopy,
-  PiShareFat,
   PiSparkle,
   PiSpeakerHigh,
-  PiThumbsDown,
-  PiThumbsUp,
 } from "react-icons/pi";
 import Image from "next/image";
 import BotCodeReply from "./BotCodeReply";
@@ -113,8 +108,8 @@ export default function BotReply({
     return () => {
       timeouts.forEach(clearTimeout);
     };
-  // Remove chatHandlerEmptyQuery from dependencies to prevent infinite loops
-  }, [shouldHideSuggestions, isStreaming, isRegularTextReply, setScroll]);
+  // Include chatHandlerEmptyQuery in dependencies
+  }, [shouldHideSuggestions, isStreaming, isRegularTextReply, setScroll, chatHandlerEmptyQuery]);
 
   // Simulate the typing effect
   useEffect(() => {
@@ -148,7 +143,7 @@ export default function BotReply({
     <div className="flex justify-start items-start gap-1 sm:gap-3 w-full px-4">
       <Image src={logo} alt="" className="max-sm:size-5 object-cover" />
       <div className="flex flex-col justify-start items-start gap-3 flex-1">
-        <p className="text-xs text-n100">Tutor Chatbot, {isStreaming ? new Date().toLocaleTimeString() : replyTime || new Date().toLocaleTimeString()}</p>
+        <p className="text-xs text-n100">Data Tutor, {isStreaming ? new Date().toLocaleTimeString() : replyTime || new Date().toLocaleTimeString()}</p>
         <div className="text-sm bg-primaryColor/5 py-3 px-5 border border-primaryColor/20 rounded-lg w-full max-w-[75%]">
           {isStreaming ? (
             // Streaming content display
@@ -257,13 +252,32 @@ export default function BotReply({
             </>
           )}
         </div>
-        <div className="flex justify-end items-center gap-2 cursor-pointer">
-          <PiSpeakerHigh />
-          <PiThumbsUp />
-          <PiThumbsDown />
-          <PiCopy />
-          <PiArrowsCounterClockwise />
-          <PiShareFat />
+        <div className="flex justify-end items-center gap-2">
+          <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <PiSpeakerHigh />
+          </button>
+          {/* 
+          <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <PiThumbsUp />
+          </button>
+          <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <PiThumbsDown />
+          </button>
+          <button 
+            onClick={handleCopy} 
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            title="Copy to clipboard"
+            disabled={isStreaming}
+          >
+            {copied ? <PiCheckCircle className="text-successColor" /> : <PiCopy />}
+          </button>
+          <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <PiArrowsCounterClockwise />
+          </button>
+          <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <PiShareFat />
+          </button>
+          */}
         </div>
       </div>
     </div>

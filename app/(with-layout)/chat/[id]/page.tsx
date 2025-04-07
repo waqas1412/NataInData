@@ -195,7 +195,7 @@ export default function CustomChat() {
   }, [loading, current?.id]);
 
   return (
-    <div className="bg-white h-[calc(100vh-60px)] dark:bg-slate-950 flex flex-col relative w-full">
+    <div className="bg-white h-[calc(100vh-60px)] dark:bg-[#1A1915] flex flex-col relative w-full">
       <div
         ref={scrollBoxRef}
         className="flex-1 w-full pb-44 lg:pb-44 overflow-auto"
@@ -257,7 +257,7 @@ export default function CustomChat() {
         )}
       </div>
 
-      <div className="absolute w-full bottom-0 z-30 bg-white dark:bg-slate-950 shadow-lg pb-5">
+      <div className="absolute w-full bottom-0 z-30 bg-white dark:bg-[#1A1915] shadow-lg pb-5">
         <ChatBox />
       </div>
     </div>

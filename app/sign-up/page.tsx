@@ -80,7 +80,7 @@ function SignUp() {
 
         <div className="w-full pt-4">
           <p className="text-2xl font-semibold">Let&apos;s Get Started</p>
-          <p className="text-sm pt-4">Create an account and join Tutor Chatbot</p>
+          <p className="text-sm pt-4">Create an account and join Data Tutor</p>
 
           <form
             onSubmit={handleSubmit}

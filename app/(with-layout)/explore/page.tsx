@@ -14,10 +14,10 @@ function Explore() {
       <div className="flex flex-col justify-center items-center px-6 max-w-[1080px] w-full">
         <div className="text-center">
           <h2 className="md:text-3xl text-2xl font-extrabold mb-4 mt-3 text-center text-slate-700">
-            Explore Tutor Chatbot
+            Explore Data Tutor
           </h2>
           <p className="text-center md:text-lg text-base text-slate-500 md:w-3/4 mx-auto font-medium">
-            Discover and create custom versions of Tutor Chatbot that combine
+            Discover and create custom versions of Data Tutor that combine
             your data and knowledge with AI capabilities to solve your unique
             challenges.
           </p>

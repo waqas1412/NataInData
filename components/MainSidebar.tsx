@@ -1,17 +1,16 @@
 import Image from "next/image";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import fav from "@/public/images/favicon.png";
 import {
   PiAlignLeft,
   PiArchive,
   PiArrowUUpLeft,
-  PiChatTeardropText,
   PiDeviceMobileCamera,
   PiDiamondsFour,
   PiDotsThreeBold,
   PiGear,
+  PiLightning,
   PiMagnifyingGlass,
-  PiPaintBucket,
   PiPencilLine,
   PiQuestion,
   PiRobot,
@@ -63,8 +62,8 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
     }
   }, [chatList]);
   
-  // Load more chats when scrolling down
-  const loadMoreChats = () => {
+  // Load more chats when scrolling down - wrapped in useCallback to prevent dependency changes
+  const loadMoreChats = useCallback(() => {
     if (isLoadingMore || !hasMoreChats || !chatList) return;
     
     setIsLoadingMore(true);
@@ -85,7 +84,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
     setTimeout(() => {
       setIsLoadingMore(false);
     }, 300);
-  };
+  }, [chatList, hasMoreChats, isLoadingMore, page]);
   
   // Setup intersection observer for infinite scroll
   useEffect(() => {
@@ -102,7 +101,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [hasMoreChats, isLoadingMore, chatList, loadMoreChats]);
+  }, [hasMoreChats, isLoadingMore, loadMoreChats]);
   
   useEffect(() => {
     if (window.innerWidth > 992) {
@@ -139,7 +138,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   return (
     <>
       <div
-        className={`w-[312px] bg-white dark:bg-n0 border-r border-primaryColor/20 h-dvh overflow-hidden duration-500 max-lg:absolute z-40 top-0 left-0 ${
+        className={`w-[312px] bg-white dark:bg-[#1A1915] border-r border-primaryColor/20 h-dvh overflow-hidden duration-500 max-lg:absolute z-40 top-0 left-0 ${
           showSidebar
             ? "visible opacity-100"
             : "max-lg:invisible max-lg:opacity-0 ml-[-312px]"
@@ -154,19 +153,19 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
               <div className="flex justify-start items-center gap-1.5">
                 <Image src={fav} alt="" />
                 <span className="text-2xl font-semibold text-n700 dark:text-n30">
-                  Tutor Chatbot
+                  Data Tutor
                 </span>
               </div>
               <div className="flex justify-start items-center gap-2">
                 <button
                   onClick={() => modalOpen("Search")}
-                  className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 dark:bg-n0"
+                  className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 dark:bg-[#1A1915]"
                 >
                   <PiMagnifyingGlass />
                 </button>
                 <button
                   onClick={() => setShowSidebar(false)}
-                  className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 dark:bg-n0"
+                  className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 dark:bg-[#1A1915]"
                 >
                   <PiArrowUUpLeft />
                 </button>
@@ -181,7 +180,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                     : "hover:text-primaryColor hover:bg-primaryColor/10"
                 }`}
               >
-                <PiChatTeardropText size={20} />
+                <PiLightning size={20} className={isActive("/new-chat") ? "" : "text-primaryColor"} />
                 <span className="text-sm font-medium">General</span>
               </Link>
               <button
@@ -297,17 +296,6 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                   <span className="text-sm">Support</span>
                 </span>
                 <span className="block size-1 rounded-full bg-successColor"></span>
-              </button>
-              <button
-                onClick={(e) => handleRestrictedNavigation("/custom-bots", e)}
-                className={`flex justify-start w-full py-3 px-6 items-center gap-2 rounded-xl transition-colors duration-300 text-left ${
-                  isActive("/custom-bots")
-                    ? "text-white bg-primaryColor"
-                    : "hover:text-primaryColor hover:bg-primaryColor/10"
-                }`}
-              >
-                <PiPaintBucket size={20} className={isActive("/custom-bots") ? "" : "text-primaryColor"} />
-                <span className="text-sm">Custom Bots</span>
               </button>
               <button
                 className="w-full flex justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
