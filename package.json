@@ -16,6 +16,7 @@
     "@types/marked": "^5.0.2",
     "@wavesurfer/react": "^1.0.9",
     "ai": "^4.2.6",
+    "framer-motion": "^12.6.3",
     "isomorphic-dompurify": "^2.22.0",
     "lucide-react": "^0.483.0",
     "marked": "^15.0.7",
