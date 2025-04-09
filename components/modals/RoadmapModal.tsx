@@ -9,9 +9,13 @@ function RoadmapModal() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageCount] = useState(10); // There are 10 roadmap images
   const [initialLoading, setInitialLoading] = useState(true);
+  const [imageLoading, setImageLoading] = useState(false); // Loading state for navigation
+  const [showLoader, setShowLoader] = useState(true); // Control loader visibility
   const [isZoomed, setIsZoomed] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0])); // Track loaded images
   const { modalClose } = useMainModal();
+  const loaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Motion values for drag
   const x = useMotionValue(0);
@@ -30,13 +34,41 @@ function RoadmapModal() {
   // Functions to navigate between images
   const nextImage = useCallback(() => {
     if (isZoomed) resetZoom(); // Reset zoom when changing image
-    setCurrentImageIndex((prev) => (prev === imageCount - 1 ? 0 : prev + 1));
-  }, [isZoomed, resetZoom, imageCount]);
+    const nextIndex = currentImageIndex === imageCount - 1 ? 0 : currentImageIndex + 1;
+    
+    // Show loading if this image hasn't been loaded yet
+    if (!loadedImages.has(nextIndex)) {
+      setImageLoading(true);
+      // Use a small delay before showing the loader to avoid flashing for fast-loading images
+      if (loaderTimeoutRef.current) {
+        clearTimeout(loaderTimeoutRef.current);
+      }
+      loaderTimeoutRef.current = setTimeout(() => {
+        setShowLoader(true);
+      }, 200);
+    }
+    
+    setCurrentImageIndex(nextIndex);
+  }, [isZoomed, resetZoom, imageCount, currentImageIndex, loadedImages]);
 
   const prevImage = useCallback(() => {
     if (isZoomed) resetZoom(); // Reset zoom when changing image
-    setCurrentImageIndex((prev) => (prev === 0 ? imageCount - 1 : prev - 1));
-  }, [isZoomed, resetZoom, imageCount]);
+    const prevIndex = currentImageIndex === 0 ? imageCount - 1 : currentImageIndex - 1;
+    
+    // Show loading if this image hasn't been loaded yet
+    if (!loadedImages.has(prevIndex)) {
+      setImageLoading(true);
+      // Use a small delay before showing the loader to avoid flashing for fast-loading images
+      if (loaderTimeoutRef.current) {
+        clearTimeout(loaderTimeoutRef.current);
+      }
+      loaderTimeoutRef.current = setTimeout(() => {
+        setShowLoader(true);
+      }, 200);
+    }
+    
+    setCurrentImageIndex(prevIndex);
+  }, [isZoomed, resetZoom, imageCount, currentImageIndex, loadedImages]);
 
   // Zoom functions
   const zoomIn = useCallback(() => {
@@ -48,6 +80,30 @@ function RoadmapModal() {
   const zoomOut = useCallback(() => {
     resetZoom();
   }, [resetZoom]);
+
+  // Handle image load
+  const handleImageLoad = useCallback(() => {
+    // Clear any pending loader timeout
+    if (loaderTimeoutRef.current) {
+      clearTimeout(loaderTimeoutRef.current);
+      loaderTimeoutRef.current = null;
+    }
+    
+    // Add a small delay before hiding loader to ensure smooth transition
+    setTimeout(() => {
+      setShowLoader(false);
+      // Wait for fade-out animation before removing loading state
+      setTimeout(() => {
+        setImageLoading(false);
+      }, 300);
+    }, 100);
+    
+    setLoadedImages(prev => {
+      const newSet = new Set(prev);
+      newSet.add(currentImageIndex);
+      return newSet;
+    });
+  }, [currentImageIndex]);
 
   // Handle drag when zoomed
   const handleDragStart = useCallback(() => {
@@ -105,10 +161,21 @@ function RoadmapModal() {
       });
 
       await Promise.all(imagePromises);
-      setInitialLoading(false);
+      // Fade out the initial loading state
+      setShowLoader(false);
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, 300);
     };
 
     preloadImages();
+    
+    // Cleanup any timeouts on unmount
+    return () => {
+      if (loaderTimeoutRef.current) {
+        clearTimeout(loaderTimeoutRef.current);
+      }
+    };
   }, [imageCount]);
 
   // Keyboard navigation
@@ -146,12 +213,22 @@ function RoadmapModal() {
       <div 
         className="relative overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-900 flex-1 flex items-center justify-center"
       >
-        {initialLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/80 dark:bg-gray-900/80 z-10">
-            <div className="w-8 h-8 border-4 border-primaryColor/30 border-t-primaryColor rounded-full animate-spin"></div>
-            <p className="mt-4 text-sm text-gray-500">Loading roadmap images...</p>
-          </div>
-        )}
+        <AnimatePresence>
+          {(initialLoading || (imageLoading && showLoader)) && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/80 dark:bg-gray-900/80 z-10"
+            >
+              <div className="w-8 h-8 border-4 border-primaryColor/30 border-t-primaryColor rounded-full animate-spin"></div>
+              <p className="mt-4 text-sm text-gray-500">
+                {initialLoading ? "Loading roadmap images..." : "Loading image..."}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <AnimatePresence mode="wait">
           <motion.div
@@ -196,6 +273,7 @@ function RoadmapModal() {
                   draggable={false}
                   onDragStart={(e) => e.preventDefault()}
                   priority={currentImageIndex === 0}
+                  onLoad={handleImageLoad}
                 />
               </div>
             </motion.div>
@@ -207,6 +285,7 @@ function RoadmapModal() {
           onClick={prevImage}
           className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-md hover:bg-white dark:hover:bg-gray-700 transition-colors z-20"
           aria-label="Previous image"
+          disabled={imageLoading}
         >
           <ChevronLeft size={20} className="text-gray-700 dark:text-gray-300" />
         </button>
@@ -215,6 +294,7 @@ function RoadmapModal() {
           onClick={nextImage}
           className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 shadow-md hover:bg-white dark:hover:bg-gray-700 transition-colors z-20"
           aria-label="Next image"
+          disabled={imageLoading}
         >
           <ChevronRight size={20} className="text-gray-700 dark:text-gray-300" />
         </button>
@@ -260,6 +340,7 @@ function RoadmapModal() {
                   : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
               }`}
               aria-label={`Go to image ${index + 1}`}
+              disabled={imageLoading}
             />
           ))}
         </div>
