@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { Crown, ArrowRight, X, LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 
 interface SubscriptionOverlayProps {
   onClose?: () => void;
@@ -13,6 +14,7 @@ export default function SubscriptionOverlay({ onClose }: SubscriptionOverlayProp
   const { redirectToPayment } = useSubscriptionStore();
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     // Add a small delay to trigger the fade-in animation
@@ -44,7 +46,7 @@ export default function SubscriptionOverlay({ onClose }: SubscriptionOverlayProp
       <div className="absolute inset-0 bg-black/0 backdrop-blur-sm" onClick={handleClose} />
 
       {/* Content */}
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className={`relative w-full max-w-lg ${resolvedTheme === 'dark' ? 'bg-n0' : 'bg-white'} rounded-2xl shadow-2xl overflow-hidden`}>
         {/* Close button */}
         <button 
           onClick={handleClose}
@@ -54,7 +56,7 @@ export default function SubscriptionOverlay({ onClose }: SubscriptionOverlayProp
         </button>
 
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-purple-600 p-8 text-center">
+        <div className="bg-gradient-to-r from-primaryColor to-secondaryColor p-8 text-center">
           <div className="flex justify-center mb-4">
             <div className="bg-white/20 p-3 rounded-full">
               <Crown className="h-8 w-8 text-white" />
@@ -67,16 +69,16 @@ export default function SubscriptionOverlay({ onClose }: SubscriptionOverlayProp
         {/* Content Section */}
         <div className="p-8">
           <div className="space-y-4 mb-8">
-            <div className="flex items-center space-x-3 text-gray-700">
-              <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-purple-500" />
+            <div className={`flex items-center space-x-3 ${resolvedTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primaryColor" />
               <p>Advanced AI-powered data analysis</p>
             </div>
-            <div className="flex items-center space-x-3 text-gray-700">
-              <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-purple-500" />
+            <div className={`flex items-center space-x-3 ${resolvedTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primaryColor" />
               <p>Unlimited access to all features</p>
             </div>
-            <div className="flex items-center space-x-3 text-gray-700">
-              <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-purple-500" />
+            <div className={`flex items-center space-x-3 ${resolvedTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primaryColor" />
               <p>Priority customer support</p>
             </div>
           </div>
@@ -84,16 +86,16 @@ export default function SubscriptionOverlay({ onClose }: SubscriptionOverlayProp
           {/* Price Section */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center">
-              <span className="text-4xl font-bold text-gray-900">$9.99</span>
-              <span className="text-xl text-gray-500 ml-2">/month</span>
+              <span className={`text-4xl font-bold ${resolvedTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>$9.99</span>
+              <span className={`text-xl ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} ml-2`}>/month</span>
             </div>
-            <p className="text-gray-500 mt-2">Cancel anytime • No commitments</p>
+            <p className={`${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-2`}>Cancel anytime • No commitments</p>
           </div>
 
           {/* CTA Button */}
           <button
             onClick={handleSubscribe}
-            className="w-full py-4 px-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-purple-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
+            className="w-full py-4 px-6 bg-gradient-to-r from-primaryColor to-secondaryColor text-white font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
           >
             {user ? (
               <>
