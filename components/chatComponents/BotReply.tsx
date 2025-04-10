@@ -5,13 +5,11 @@ import BotImageReply from "./BotImageReply";
 import BotRetouchImageReply from "./BotRetouchImageReply";
 import BotTableReply from "./BotTableReply";
 import { TypeAnimation } from "react-type-animation";
-import logo from "@/public/images/favicon.png";
 import {
   PiChecks,
   PiSparkle,
   PiSpeakerHigh,
 } from "react-icons/pi";
-import Image from "next/image";
 import BotCodeReply from "./BotCodeReply";
 import { useChatHandler } from "@/stores/chatList";
 import BotSuggestionReply from "./BotSuggestionReply";
@@ -141,7 +139,13 @@ export default function BotReply({
 
   return (
     <div className="flex justify-start items-start gap-1 sm:gap-3 w-full px-4">
-      <Image src={logo} alt="" className="max-sm:size-5 object-cover" />
+      <img 
+        src="/images/DataTutorCircle.png" 
+        alt="Data Tutor Logo" 
+        width={48} 
+        height={48} 
+        className="max-sm:size-5 object-cover"
+      />
       <div className="flex flex-col justify-start items-start gap-3 flex-1">
         <p className="text-xs text-n100">Data Tutor, {isStreaming ? new Date().toLocaleTimeString() : replyTime || new Date().toLocaleTimeString()}</p>
         <div className="text-sm bg-primaryColor/5 py-3 px-5 border border-primaryColor/20 rounded-lg w-full max-w-[75%]">

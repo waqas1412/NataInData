@@ -1,7 +1,5 @@
 "use client";
 import React, { useEffect } from "react";
-import logo from "@/public/images/favicon.png";
-import Image from "next/image";
 import { chatOptions } from "@/constants/data";
 import ChatBox from "@/components/ChatBox";
 import { useChatHandler } from "@/stores/chatList";
@@ -36,13 +34,20 @@ function NewChat() {
           className="flex flex-col justify-center items-center text-center pb-8"
         >
           <div className="flex justify-start items-center gap-3">
-            <Image src={logo} alt="" />
+            <img 
+              src="/images/DataTutorCircle.png" 
+              alt="Data Tutor Logo" 
+              width={64} 
+              height={64}
+              className="object-contain"
+            />
             <p className="text-2xl font-semibold text-n700 dark:text-n30">
               Hello, I&apos;m Data Tutor
             </p>
           </div>
+          
           <p className="text-n700 pt-4 dark:text-n30">
-          Designed just for you, powered by top-tier Data Engineering content — better than ChatGPT.
+            Designed just for you, powered by top-tier Data Engineering content — better than ChatGPT.
           </p>
         </div>
 
