@@ -61,7 +61,7 @@ function SignIn() {
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-semibold mb-2">Sign In</h1>
             <p className="text-gray-600">
-              Welcome back to Tutor Chatbot
+              Welcome back to Data Tutor
             </p>
           </div>
           <p className="text-2xl font-semibold">Welcome Back!</p>

@@ -23,7 +23,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #4d6bfe;
+  background-color: rgb(244, 123, 32);
 }
 /* For Chrome, Safari, Edge, and Opera */
 input[type="number"]::-webkit-inner-spin-button,
@@ -94,4 +94,15 @@ pre {
   white-space: pre-line;
   word-wrap: break-word;
   text-align: justify;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* For IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

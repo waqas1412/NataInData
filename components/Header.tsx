@@ -16,7 +16,7 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
   const path = usePathname();
 
   return (
-    <div className="px-6 py-3 flex justify-between items-center w-full sticky top-0 left-0 right-0 bg-white z-30 dark:bg-n0">
+    <div className="px-6 py-3 flex justify-between items-center w-full sticky top-0 left-0 right-0 bg-white z-30 dark:bg-[#1A1915] dark:bg-opacity-95 backdrop-blur-sm">
       <div className="flex justify-start items-center gap-2">
         <button
           className={`${showSidebar ? "hidden" : ""}`}
@@ -28,17 +28,6 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
       </div>
       <div className="flex justify-start items-center gap-2 sm:gap-4 ">
         <ThemeSwitch />
-        {path.includes("chat") && (
-          <button
-            onClick={() => modalOpen("Share Public Link")}
-            className="flex justify-center items-center gap-2 py-2  px-2 sm:px-4 rounded-full border border-primaryColor text-primaryColor"
-          >
-            <PiUploadSimple />
-            <span className="text-xs font-medium max-[400px]:hidden">
-              Share
-            </span>
-          </button>
-        )}
         {path === "/custom-bots" && (
           <button
             onClick={() => modalOpen("Create New Bot")}

@@ -1,10 +1,10 @@
 # NataInData - AI-Powered Chat Application
 
-NataInData is a modern, AI-powered chat application built with Next.js, React, and Supabase. It provides an intuitive interface for users to interact with an AI tutor chatbot, with real-time message synchronization across devices.
+NataInData is a modern, AI-powered chat application built with Next.js, React, and Supabase. It provides an intuitive interface for users to interact with an AI Data Tutor, with real-time message synchronization across devices.
 
 ## Features
 
-- **AI-Powered Conversations**: Engage with a sophisticated AI tutor chatbot
+- **AI-Powered Conversations**: Engage with a sophisticated AI Data Tutor
 - **Real-time Synchronization**: Messages sync instantly across all devices
 - **User Authentication**: Secure login and registration system
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
