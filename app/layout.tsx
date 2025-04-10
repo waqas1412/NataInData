@@ -16,20 +16,33 @@ export const metadata: Metadata = {
     icon: [
       {
         url: "/images/DataTutorCircle.png",
-        sizes: "32x32",
-        type: "image/png"
+        sizes: "32x32"
       },
       {
         url: "/images/DataTutorCircle.png",
-        sizes: "16x16",
-        type: "image/png"
+        sizes: "16x16"
+      },
+      {
+        url: "/images/DataTutorCircle.png",
+        sizes: "48x48"
+      },
+      {
+        url: "/images/DataTutorCircle.png",
+        sizes: "64x64"
       }
     ],
-    apple: {
-      url: "/images/DataTutorCircle.png",
-      sizes: "180x180",
-      type: "image/png"
-    }
+    shortcut: [
+      {
+        url: "/images/DataTutorCircle.png"
+      }
+    ],
+    apple: [
+      {
+        url: "/images/DataTutorCircle.png",
+        sizes: "180x180",
+        type: "image/png"
+      }
+    ]
   }
 };
 
@@ -40,6 +53,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/images/DataTutorCircle.png" sizes="any" />
+        <link rel="shortcut icon" href="/images/DataTutorCircle.png" />
+        <link rel="apple-touch-icon" href="/images/DataTutorCircle.png" />
+      </head>
       <body className={`${InterFont.variable} `}>
         <Providers>
           {children}
