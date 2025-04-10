@@ -167,11 +167,6 @@ export default function RoadmapPage() {
 
   return (
     <div className="bg-white h-[calc(100vh-60px)] dark:bg-[#1A1915] flex flex-col relative w-full">
-      <div className="py-6 px-4 border-b border-gray-200 dark:border-gray-800">
-        <h1 className="text-2xl font-semibold">Roadmap</h1>
-        <p className="text-gray-600 dark:text-gray-400">Your personalized learning journey</p>
-      </div>
-      
       <div
         ref={scrollBoxRef}
         className="flex-1 w-full pb-44 lg:pb-44 overflow-auto"
@@ -192,11 +187,20 @@ export default function RoadmapPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-6 px-4 md:px-6 mx-auto max-w-[1070px] w-full">
+          <div className="flex flex-col gap-6 px-4 md:px-6 mx-auto max-w-[1070px] w-full pt-4">
             {/* Display welcome message if no messages yet */}
             {displayedMessages.length === 0 && (
               <BotReply
-                replyType="Welcome to your Roadmap Chat! This is a dedicated space for planning your learning journey. The chat will be persistent across sessions so you can always come back to it."
+                replyType="Welcome to your Roadmap chat! This your Data Engineering journey with:
+
+130 days of guided learning
+Bite-sized lesson
+Divided in topics, easy to digest! 
+Based on the best materials
+Saves you tons of times and effort 
+Re-ask if you didn't get something
+
+Click on Show Roamap button to see how your journey will look like."
                 setScroll={setScroll}
                 isAnimation={false}
               />

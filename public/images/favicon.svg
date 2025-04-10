@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <title>Polished Orange Circle with Yellow Lightning Bolt</title>
+  <desc>SVG icon based on user code, polished to better match the reference image. Corrected circle radius, path data, and refined filter/gradient.</desc>
+
+  <defs>
+    <radialGradient id="orangeGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#FFA233" />
+      <stop offset="100%" stop-color="#FF8C00" />
+    </radialGradient>
+    
+    <linearGradient id="boltGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF099" /> <stop offset="100%" stop-color="#FFD700" /> </linearGradient>
+
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.4" /> 
+      </filter>
+  </defs>
+  
+  <circle cx="100" cy="100" r="100" fill="url(#orangeGradient)" />
+  
+  <path d="M 100 20 L 65 115 L 90 115 L 100 180 L 135 85 L 110 85 Z" 
+        fill="url(#boltGradient)" 
+        filter="url(#shadow)" />
+</svg>

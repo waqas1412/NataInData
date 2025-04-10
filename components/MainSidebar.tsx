@@ -1,6 +1,4 @@
-import Image from "next/image";
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import fav from "@/public/images/favicon.png";
 import {
   PiAlignLeft,
   PiArchive,
@@ -151,7 +149,13 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
           <div className="flex-shrink-0">
             <div className="flex justify-between items-center">
               <div className="flex justify-start items-center gap-1.5">
-                <Image src={fav} alt="" />
+                <img 
+                  src="/images/DataTutorCircle.png" 
+                  alt="Data Tutor Logo" 
+                  width={48} 
+                  height={48}
+                  className="object-contain"
+                />
                 <span className="text-2xl font-semibold text-n700 dark:text-n30">
                   Data Tutor
                 </span>

@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { Chat, ChatMessagesType } from '@/stores/chatList';
-import { v4 as uuidv4 } from 'uuid';
 
 // Type definitions for Supabase tables
 type SupabaseChat = {
@@ -15,10 +14,10 @@ type SupabaseChat = {
 type SupabaseMessage = {
   id: string;
   chat_id: string;
-  user_id: string;
   content: string;
   is_user: boolean;
   created_at: string;
+  updated_at: string;
 };
 
 // RPC function result types
@@ -59,12 +58,10 @@ export function supabaseChatToAppChat(
  */
 export function appMessageToSupabaseMessage(
   message: ChatMessagesType,
-  chatId: string,
-  userId: string
-): Omit<SupabaseMessage, 'id' | 'created_at'> {
+  chatId: string
+): Omit<SupabaseMessage, 'id' | 'created_at' | 'updated_at'> {
   return {
     chat_id: chatId,
-    user_id: userId,
     content: typeof message.text === 'string'
       ? message.text
       : JSON.stringify(message.text),
@@ -125,44 +122,30 @@ export async function createChat(
   isRoadmapChat: boolean = false
 ): Promise<Chat | null> {
   try {
-    // Create chat
-    const { data: chat, error: chatError } = await supabase
-      .from('chats')
-      .insert({
-        user_id: userId,
-        title: title,
-        is_roadmap_chat: isRoadmapChat
-      })
-      .select()
-      .single();
+    // Use the RPC function to create a chat
+    const { data, error } = await supabase.rpc('create_chat', {
+      p_user_id: userId,
+      p_title: title,
+      p_initial_message: initialMessage
+    });
 
-    if (chatError) {
-      console.error('Error creating chat:', chatError);
+    if (error) {
+      console.error('Error creating chat:', error);
       return null;
     }
 
-    if (!chat) {
-      console.error('No chat data returned after creation');
+    // The RPC function returns the chat ID
+    const chatId = data;
+
+    if (!chatId) {
+      console.error('No chat ID returned after creation');
       return null;
-    }
-
-    // Create initial message
-    const { error: msgError } = await supabase
-      .from('messages')
-      .insert({
-        chat_id: chat.id,
-        user_id: userId,
-        content: initialMessage,
-        is_user: true,
-      });
-
-    if (msgError) {
-      console.error('Error creating initial message:', msgError);
     }
 
     return {
-      id: chat.id,
-      title: chat.title,
+      id: chatId,
+      title: title,
+      is_roadmap_chat: isRoadmapChat,
       messages: [
         {
           text: initialMessage,
@@ -252,12 +235,17 @@ export async function syncChatToSupabase(
       
       // Add remaining messages
       for (const message of remainingMessages) {
-        await addMessageToChat(
-          chat.id,
-          userId,
-          typeof message.text === 'string' ? message.text : JSON.stringify(message.text),
-          message.isUser
-        );
+        try {
+          await addMessageToChat(
+            chat.id,
+            userId,
+            typeof message.text === 'string' ? message.text : JSON.stringify(message.text),
+            message.isUser
+          );
+        } catch (error) {
+          console.error('Error adding message during sync:', error);
+          // Continue with other messages
+        }
       }
     } else {
       // Update chat title if it exists
@@ -274,30 +262,41 @@ export async function syncChatToSupabase(
         return false;
       }
 
+      // Get existing messages to avoid duplicates
+      const { data: existingChats } = await supabase.rpc('get_user_chats', {
+        p_user_id: userId
+      });
+      
+      const currentChat = existingChats?.find((c: RpcChat) => c.id === chat.id);
+      const existingMessages = currentChat?.messages || [];
+
       // Sync all messages
       for (const message of chat.messages) {
-        // Check if message already exists (by matching content and timestamp)
-        const { data: existingMessages, error: msgFetchError } = await supabase
-          .from('messages')
-          .select('id')
-          .eq('chat_id', chat.id)
-          .eq('user_id', userId)
-          .eq('content', typeof message.text === 'string' ? message.text : JSON.stringify(message.text))
-          .eq('created_at', message.timestamp);
-
-        if (msgFetchError) {
-          console.error('Error checking if message exists:', msgFetchError);
-          continue;
-        }
-
+        // Check if message already exists by content and timestamp
+        const messageExists = existingMessages.some((existing: RpcChatMessage) => 
+          existing.content === (typeof message.text === 'string' ? message.text : JSON.stringify(message.text)) &&
+          existing.timestamp === message.timestamp
+        );
+        
         // Only add message if it doesn't exist
-        if (!existingMessages || existingMessages.length === 0) {
-          await addMessageToChat(
-            chat.id,
-            userId,
-            typeof message.text === 'string' ? message.text : JSON.stringify(message.text),
-            message.isUser
-          );
+        if (!messageExists) {
+          try {
+            await addMessageToChat(
+              chat.id,
+              userId,
+              typeof message.text === 'string' ? message.text : JSON.stringify(message.text),
+              message.isUser
+            );
+          } catch (error) {
+            // Handle unauthorized errors specially
+            if (error instanceof Error && error.message.includes('Unauthorized')) {
+              console.error('User does not have permission to add messages to this chat');
+              return false;
+            }
+            
+            console.error('Error adding message during sync:', error);
+            // Continue trying to add other messages
+          }
         }
       }
     }
@@ -319,76 +318,32 @@ export async function findOrCreateRoadmapChat(userId: string): Promise<Chat | nu
       return null;
     }
     
-    // Get all user chats
-    const { data, error } = await supabase.rpc('get_user_chats', {
+    // Use a database function to atomically find or create a roadmap chat
+    // This prevents race conditions when multiple calls happen simultaneously
+    const { data, error } = await supabase.rpc('find_or_create_roadmap_chat', {
       p_user_id: userId
     });
     
     if (error) {
-      console.error('Error fetching user chats:', error);
+      console.error('Error finding or creating roadmap chat:', error);
       return null;
     }
     
-    if (data && data.length > 0) {
-      // Find roadmap chat if it exists
-      const roadmapChat = data.find((chat: RpcChat) => chat.is_roadmap_chat);
-      
-      if (roadmapChat) {
-        // Convert to our app format
-        return {
-          id: roadmapChat.id,
-          title: roadmapChat.title,
-          is_roadmap_chat: true,
-          messages: (roadmapChat.messages || []).map((msg: RpcChatMessage) => ({
-            text: msg.content,
-            isUser: msg.is_user,
-            timestamp: msg.timestamp
-          }))
-        };
-      }
-    }
-    
-    // No roadmap chat found, create one
-    const chatId = uuidv4();
-    const title = "Your Roadmap Chat";
-    
-    // Create a welcome message from AI instead of having the user "send" a message
-    const welcomeMessage = "Welcome to your Roadmap Chat! This is a dedicated space for planning your learning journey. The chat will be persistent across sessions so you can always come back to it.";
-    
-    // Create the chat in Supabase with an empty initial message (to avoid triggering auto-messages)
-    const { error: createError } = await supabase.rpc('create_chat_with_id', {
-      p_id: chatId,
-      p_user_id: userId,
-      p_title: title,
-      p_initial_message: "", // Empty initial message
-      p_is_roadmap_chat: true
-    });
-    
-    if (createError) {
-      console.error('Error creating roadmap chat:', createError);
+    if (!data) {
+      console.error('No data returned from find_or_create_roadmap_chat');
       return null;
     }
     
-    // Add welcome message from the AI
-    await supabase.rpc('add_message_to_chat', {
-      p_chat_id: chatId,
-      p_user_id: userId,
-      p_content: welcomeMessage,
-      p_is_user: false
-    });
-    
-    // Return the newly created chat
+    // Convert to our app format
     return {
-      id: chatId,
-      title: title,
+      id: data.id,
+      title: data.title,
       is_roadmap_chat: true,
-      messages: [
-        {
-          text: welcomeMessage,
-          isUser: false,
-          timestamp: new Date().toISOString()
-        }
-      ]
+      messages: (data.messages || []).map((msg: RpcChatMessage) => ({
+        text: msg.content,
+        isUser: msg.is_user,
+        timestamp: msg.timestamp
+      }))
     };
   } catch (error) {
     console.error('Error in findOrCreateRoadmapChat:', error);
