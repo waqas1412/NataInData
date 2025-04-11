@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import typography from '@tailwindcss/typography';
 
 export default {
   content: [
@@ -43,7 +44,63 @@ export default {
         "30": "120px",
         "15": "60px",
       },
+      typography: (theme: (path: string) => string) => ({
+        DEFAULT: {
+          css: {
+            color: theme('colors.gray.700'),
+            a: {
+              color: theme('colors.primaryColor'),
+              '&:hover': {
+                color: theme('colors.secondaryColor'),
+              },
+            },
+            h1: {
+              color: theme('colors.gray.800'),
+              fontWeight: '700',
+            },
+            h2: {
+              color: theme('colors.gray.800'),
+              fontWeight: '600',
+            },
+            h3: {
+              color: theme('colors.gray.800'),
+              fontWeight: '600',
+            },
+            code: {
+              color: theme('colors.indigo.500'),
+              backgroundColor: theme('colors.gray.100'),
+              padding: '0.2em 0.4em',
+              borderRadius: '0.25rem',
+              fontWeight: '400',
+            },
+          },
+        },
+        dark: {
+          css: {
+            color: theme('colors.gray.300'),
+            a: {
+              color: theme('colors.primaryColor'),
+              '&:hover': {
+                color: theme('colors.secondaryColor'),
+              },
+            },
+            h1: {
+              color: theme('colors.gray.200'),
+            },
+            h2: {
+              color: theme('colors.gray.200'),
+            },
+            h3: {
+              color: theme('colors.gray.200'),
+            },
+            code: {
+              color: theme('colors.indigo.400'),
+              backgroundColor: theme('colors.gray.800'),
+            },
+          },
+        },
+      }),
     },
   },
-  plugins: [],
+  plugins: [typography],
 } satisfies Config;

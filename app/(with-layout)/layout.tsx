@@ -6,10 +6,15 @@ import MainModal from "@/components/modals/MainModal";
 import GradientBackground from "@/components/ui/GradientBackground";
 import { useChatHandler } from "@/stores/chatList";
 import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 function Layout({ children }: { children: React.ReactNode }) {
   const [showSidebar, setShowSidebar] = useState(false);
   const { updateChatList } = useChatHandler();
+  const pathname = usePathname();
+  
+  // Check if current page is roadmap
+  const isRoadmapPage = pathname === "/roadmap";
 
   useEffect(() => {
     updateChatList();
@@ -23,10 +28,10 @@ function Layout({ children }: { children: React.ReactNode }) {
           showSidebar={showSidebar}
           setShowSidebar={setShowSidebar}
         />
-        <div className="flex-1 flex flex-col justify-between items-center h-full pb-3 relative z-20">
+        <div className={`flex-1 flex flex-col justify-between items-center h-full ${!isRoadmapPage ? 'pb-3' : ''} relative z-20`}>
           <Header showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
           {children}
-          <Footer />
+          {!isRoadmapPage && <Footer />}
         </div>
       </div>
 

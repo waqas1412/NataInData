@@ -44,7 +44,7 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
             className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-primaryColor hover:bg-primaryColor/90 transition-colors text-white mr-2"
           >
             <MapPin size={16} />
-            <span className="text-xs font-medium">Show Road Map</span>
+            <span className="text-xs font-medium">SHOW ROADMAP</span>
           </button>
         )}
         

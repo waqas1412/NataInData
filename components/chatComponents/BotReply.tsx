@@ -5,6 +5,7 @@ import BotImageReply from "./BotImageReply";
 import BotRetouchImageReply from "./BotRetouchImageReply";
 import BotTableReply from "./BotTableReply";
 import { TypeAnimation } from "react-type-animation";
+import ReactMarkdown from "react-markdown";
 import {
   PiChecks,
   PiSparkle,
@@ -156,8 +157,15 @@ export default function BotReply({
               <span className="inline-block w-2 h-4 ml-1 bg-primaryColor/70 animate-pulse"></span>
             </div>
           ) : isRegularTextReply ? (
-            // Regular text reply display
-            <div className="whitespace-pre-wrap">{replyType}</div>
+            // Regular text reply display with Markdown support
+            <div className="prose prose-sm max-w-none dark:prose-invert dark:text-gray-300 
+              prose-headings:text-primaryColor dark:prose-headings:text-primaryColor 
+              prose-a:text-primaryColor dark:prose-a:text-primaryColor 
+              prose-strong:text-primaryColor/90 dark:prose-strong:text-primaryColor/90
+              prose-code:bg-gray-200 dark:prose-code:bg-gray-600 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-blue-700 dark:prose-code:text-blue-300
+              prose-pre:bg-gray-200 dark:prose-pre:bg-gray-600 dark:prose-pre:text-blue-300">
+              <ReactMarkdown>{replyType}</ReactMarkdown>
+            </div>
           ) : (
             // Animation or special content display
             <>
