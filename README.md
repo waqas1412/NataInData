@@ -1,6 +1,6 @@
 <div align="center">
 
-# NataInData
+# Data Tutor
 
 <img src="public/logo.png" alt="NataInData Logo" width="140" height="140">
 
