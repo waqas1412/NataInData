@@ -24,6 +24,12 @@ function RoadmapModal() {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
 
+  // Add state to track viewport dimensions
+  const [viewport, setViewport] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 800
+  });
+
   // Reset zoom (used by other functions)
   const resetZoom = useCallback(() => {
     setIsZoomed(false);
@@ -36,16 +42,18 @@ function RoadmapModal() {
     if (isZoomed) resetZoom(); // Reset zoom when changing image
     const nextIndex = currentImageIndex === imageCount - 1 ? 0 : currentImageIndex + 1;
     
-    // Show loading if this image hasn't been loaded yet
+    // Only show loading if this image hasn't been loaded yet
     if (!loadedImages.has(nextIndex)) {
       setImageLoading(true);
-      // Use a small delay before showing the loader to avoid flashing for fast-loading images
+      // Show loader only if image takes more than 100ms to load
       if (loaderTimeoutRef.current) {
         clearTimeout(loaderTimeoutRef.current);
       }
       loaderTimeoutRef.current = setTimeout(() => {
-        setShowLoader(true);
-      }, 200);
+        if (!loadedImages.has(nextIndex)) {
+          setShowLoader(true);
+        }
+      }, 100);
     }
     
     setCurrentImageIndex(nextIndex);
@@ -55,16 +63,18 @@ function RoadmapModal() {
     if (isZoomed) resetZoom(); // Reset zoom when changing image
     const prevIndex = currentImageIndex === 0 ? imageCount - 1 : currentImageIndex - 1;
     
-    // Show loading if this image hasn't been loaded yet
+    // Only show loading if this image hasn't been loaded yet
     if (!loadedImages.has(prevIndex)) {
       setImageLoading(true);
-      // Use a small delay before showing the loader to avoid flashing for fast-loading images
+      // Show loader only if image takes more than 100ms to load
       if (loaderTimeoutRef.current) {
         clearTimeout(loaderTimeoutRef.current);
       }
       loaderTimeoutRef.current = setTimeout(() => {
-        setShowLoader(true);
-      }, 200);
+        if (!loadedImages.has(prevIndex)) {
+          setShowLoader(true);
+        }
+      }, 100);
     }
     
     setCurrentImageIndex(prevIndex);
@@ -89,21 +99,41 @@ function RoadmapModal() {
       loaderTimeoutRef.current = null;
     }
     
-    // Add a small delay before hiding loader to ensure smooth transition
+    // Hide loader immediately to prevent flashing
+    setShowLoader(false);
     setTimeout(() => {
-      setShowLoader(false);
-      // Wait for fade-out animation before removing loading state
-      setTimeout(() => {
-        setImageLoading(false);
-      }, 300);
+      setImageLoading(false);
     }, 100);
     
+    // Mark this image as loaded
     setLoadedImages(prev => {
       const newSet = new Set(prev);
       newSet.add(currentImageIndex);
       return newSet;
     });
-  }, [currentImageIndex]);
+    
+    // Preload adjacent images for smooth navigation
+    const preloadAdjacentImages = () => {
+      const nextIdx = (currentImageIndex + 1) % imageCount;
+      const prevIdx = (currentImageIndex - 1 + imageCount) % imageCount;
+      
+      [nextIdx, prevIdx].forEach(idx => {
+        if (!loadedImages.has(idx)) {
+          const img = document.createElement('img');
+          img.src = `/images/Roadmap${idx + 1}.svg`;
+          img.onload = () => {
+            setLoadedImages(prev => {
+              const newSet = new Set(prev);
+              newSet.add(idx);
+              return newSet;
+            });
+          };
+        }
+      });
+    };
+    
+    preloadAdjacentImages();
+  }, [currentImageIndex, imageCount, loadedImages]);
 
   // Handle drag when zoomed
   const handleDragStart = useCallback(() => {
@@ -146,6 +176,36 @@ function RoadmapModal() {
     };
   }, [isZoomed, containerRef, imageRef]);
 
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Initial call to set correct dimensions
+    handleResize();
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Function to adjust container size based on viewport
+  const containerStyle = useCallback(() => {
+    // Calculate optimal height based on viewport
+    const optimalHeight = Math.max(300, viewport.height * 0.8 - 120);
+    
+    return {
+      minHeight: '40vh',
+      maxHeight: `${optimalHeight}px`
+    };
+  }, [viewport.height]);
+
   // Preload all images on initial load
   useEffect(() => {
     const preloadImages = async () => {
@@ -154,6 +214,11 @@ function RoadmapModal() {
           const img = document.createElement('img');
           img.src = `/images/Roadmap${index + 1}.svg`;
           img.onload = () => {
+            setLoadedImages(prev => {
+              const newSet = new Set(prev);
+              newSet.add(index);
+              return newSet;
+            });
             resolve(index);
           };
           img.onerror = () => resolve(index); // Still resolve on error to prevent hanging
@@ -212,6 +277,7 @@ function RoadmapModal() {
       {/* Image carousel container */}
       <div 
         className="relative overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-900 flex-1 flex items-center justify-center"
+        style={containerStyle()}
       >
         <AnimatePresence>
           {(initialLoading || (imageLoading && showLoader)) && (
@@ -230,14 +296,22 @@ function RoadmapModal() {
           )}
         </AnimatePresence>
         
+        {/* Responsive container */}
+        <div className="w-full absolute inset-0 flex items-center justify-center">
+          {/* Empty div to maintain stable dimensions */}
+        </div>
+        
         <AnimatePresence mode="wait">
           <motion.div
             key={currentImageIndex}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.3 }}
-            className="w-full h-full flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5,
+              ease: "easeInOut"
+            }}
+            className="w-full flex items-center justify-center h-auto py-6 px-4"
           >
             <motion.div
               ref={imageRef}
@@ -256,23 +330,27 @@ function RoadmapModal() {
               }}
               transition={{ 
                 type: "spring", 
-                duration: 0.3,
-                stiffness: 300,
+                duration: 0.5,
+                stiffness: 200,
                 damping: 30
               }}
               className={`relative ${isZoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
             >
-              <div className="relative max-h-[65vh] w-auto">
+              <div className="relative flex items-center justify-center">
                 <Image
                   src={`/images/Roadmap${currentImageIndex + 1}.svg`}
                   alt={`Roadmap step ${currentImageIndex + 1}`}
                   className="object-contain select-none"
                   width={800}
                   height={600}
-                  style={{ maxHeight: '65vh', width: 'auto' }}
+                  style={{ 
+                    maxHeight: `calc(${viewport.height * 0.75}px - 80px)`, 
+                    width: 'auto',
+                    maxWidth: `calc(${viewport.width * 0.9}px - 40px)`
+                  }}
                   draggable={false}
                   onDragStart={(e) => e.preventDefault()}
-                  priority={currentImageIndex === 0}
+                  priority={true}
                   onLoad={handleImageLoad}
                 />
               </div>
