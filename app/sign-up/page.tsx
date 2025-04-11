@@ -2,7 +2,6 @@
 import React, { FormEvent, useState } from "react";
 import displayImg from "@/public/images/sign-up-page-img.png";
 import Image from "next/image";
-import fav from "@/public/images/favicon.png";
 import FormInput from "@/components/ui/FormInput";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Footer from "@/components/Footer";
@@ -72,7 +71,13 @@ function SignUp() {
       <GradientBackground />
       <div className="py-6 xxl:ml-[calc((100%-1296px)/2)] flex-1 flex flex-col justify-between items-start max-xxl:max-w-[600px]">
         <div className="flex justify-start items-center gap-1.5">
-          <Image src={fav} alt="" />
+          <img 
+            src="/images/DataTutorCircle.png" 
+            alt="Data Tutor Logo" 
+            width={48} 
+            height={48}
+            className="object-contain"
+          />
           <span className="text-2xl font-semibold text-n700 dark:text-n30">
             AIQuill
           </span>

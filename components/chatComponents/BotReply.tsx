@@ -5,13 +5,12 @@ import BotImageReply from "./BotImageReply";
 import BotRetouchImageReply from "./BotRetouchImageReply";
 import BotTableReply from "./BotTableReply";
 import { TypeAnimation } from "react-type-animation";
-import logo from "@/public/images/favicon.png";
+import ReactMarkdown from "react-markdown";
 import {
   PiChecks,
   PiSparkle,
   PiSpeakerHigh,
 } from "react-icons/pi";
-import Image from "next/image";
 import BotCodeReply from "./BotCodeReply";
 import { useChatHandler } from "@/stores/chatList";
 import BotSuggestionReply from "./BotSuggestionReply";
@@ -141,7 +140,13 @@ export default function BotReply({
 
   return (
     <div className="flex justify-start items-start gap-1 sm:gap-3 w-full px-4">
-      <Image src={logo} alt="" className="max-sm:size-5 object-cover" />
+      <img 
+        src="/images/DataTutorCircle.png" 
+        alt="Data Tutor Logo" 
+        width={48} 
+        height={48} 
+        className="max-sm:size-5 object-cover"
+      />
       <div className="flex flex-col justify-start items-start gap-3 flex-1">
         <p className="text-xs text-n100">Data Tutor, {isStreaming ? new Date().toLocaleTimeString() : replyTime || new Date().toLocaleTimeString()}</p>
         <div className="text-sm bg-primaryColor/5 py-3 px-5 border border-primaryColor/20 rounded-lg w-full max-w-[75%]">
@@ -152,8 +157,15 @@ export default function BotReply({
               <span className="inline-block w-2 h-4 ml-1 bg-primaryColor/70 animate-pulse"></span>
             </div>
           ) : isRegularTextReply ? (
-            // Regular text reply display
-            <div className="whitespace-pre-wrap">{replyType}</div>
+            // Regular text reply display with Markdown support
+            <div className="prose prose-sm max-w-none dark:prose-invert dark:text-gray-300 
+              prose-headings:text-primaryColor dark:prose-headings:text-primaryColor 
+              prose-a:text-primaryColor dark:prose-a:text-primaryColor 
+              prose-strong:text-primaryColor/90 dark:prose-strong:text-primaryColor/90
+              prose-code:bg-gray-200 dark:prose-code:bg-gray-600 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-blue-700 dark:prose-code:text-blue-300
+              prose-pre:bg-gray-200 dark:prose-pre:bg-gray-600 dark:prose-pre:text-blue-300">
+              <ReactMarkdown>{replyType}</ReactMarkdown>
+            </div>
           ) : (
             // Animation or special content display
             <>

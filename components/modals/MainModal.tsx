@@ -20,6 +20,7 @@ import CustomDetailsModal from "./CustomDetailsModal";
 import EditBotModal from "./EditBotModal";
 import PerformanceModal from "./PerformanceModal";
 import UploadToAIQuill from "./UploadToAIQuill";
+import RoadmapModal from "./RoadmapModal";
 
 function MainModal() {
   const { show, modalName, modalClose } = useMainModal();
@@ -71,6 +72,7 @@ function MainModal() {
         {modalName === "Custom Bot Details" && <CustomDetailsModal />}
         {modalName === "Edit Your Bot" && <EditBotModal />}
         {modalName === "Performance" && <PerformanceModal />}
+        {modalName === "Roadmap Images" && <RoadmapModal />}
       </div>
     </div>
   );

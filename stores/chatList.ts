@@ -7,6 +7,20 @@ import { subscribeToChatUpdates, subscribeToUserChats } from "@/lib/supabase-rea
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
+// Import types from supabase-helpers
+type RpcChatMessage = {
+  content: string;
+  is_user: boolean;
+  timestamp: string;
+}
+
+type RpcChat = {
+  id: string;
+  title: string;
+  is_roadmap_chat?: boolean;
+  messages: RpcChatMessage[];
+}
+
 export type ChatMessagesType = {
   text:
     | string
@@ -224,11 +238,11 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
       
       if (chats && Array.isArray(chats)) {
         // Convert the JSON data to our Chat format
-        const formattedChats = chats.map((chat: any) => ({
+        const formattedChats = chats.map((chat: RpcChat) => ({
           id: chat.id,
           title: chat.title,
           is_roadmap_chat: chat.is_roadmap_chat || false,
-          messages: chat.messages.map((msg: any) => ({
+          messages: chat.messages.map((msg: RpcChatMessage) => ({
             text: msg.content,
             isUser: msg.is_user,
             timestamp: msg.timestamp,
@@ -421,7 +435,7 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
             
             // Add to Supabase using RPC function
             try {
-              await supabase.rpc('add_message_to_chat', {
+              const { error } = await supabase.rpc('add_message_to_chat', {
                 p_chat_id: newChatId,
                 p_user_id: user.id,
                 p_content: typeof welcomeMessage.text === 'string' 
@@ -429,6 +443,15 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
                   : JSON.stringify(welcomeMessage.text),
                 p_is_user: false
               });
+              
+              if (error) {
+                // Handle error appropriately
+                if (error.message.includes('Unauthorized access to chat')) {
+                  console.error("Permission denied: User doesn't have access to this roadmap chat");
+                } else {
+                  console.error("Error adding welcome message:", error);
+                }
+              }
             } catch (error) {
               console.error("Error adding welcome message:", error);
             }
@@ -459,12 +482,25 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
           
           // Add to Supabase using RPC function
           try {
-            await supabase.rpc('add_message_to_chat', {
+            const { error } = await supabase.rpc('add_message_to_chat', {
               p_chat_id: chatId,
               p_user_id: user.id,
               p_content: typeof message.text === 'string' ? message.text : JSON.stringify(message.text),
               p_is_user: true
             });
+
+            if (error) {
+              // Special handling for authorization errors
+              if (error.message.includes('Unauthorized access to chat')) {
+                console.error("Permission denied: User doesn't have access to this chat");
+                // Let the user know they don't have access
+                set((state) => ({
+                  chatList: state.chatList.filter(chat => chat.id !== chatId)
+                }));
+              } else {
+                console.error("Error adding message:", error);
+              }
+            }
           } catch (error) {
             console.error("Error adding message:", error);
           }
@@ -549,8 +585,8 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
             });
             
             // Add AI response to Supabase using RPC function
-            try {
-              await supabase.rpc('add_message_to_chat', {
+           /* try {
+              const { error } = await supabase.rpc('add_message_to_chat', {
                 p_chat_id: currentChatId,
                 p_user_id: user.id,
                 p_content: typeof botResponse.text === 'string' 
@@ -558,9 +594,22 @@ export const useChatHandler = create<ChatHandlerType>((set, get) => ({
                   : JSON.stringify(botResponse.text),
                 p_is_user: false
               });
+              
+              if (error) {
+                // Handle error appropriately
+                if (error.message.includes('Unauthorized access to chat')) {
+                  console.error("Permission denied: User doesn't have access to this chat");
+                  // Remove chat from local state
+                  set((state) => ({
+                    chatList: state.chatList.filter(chat => chat.id !== currentChatId)
+                  }));
+                } else {
+                  console.error('Error adding AI response to database:', error);
+                }
+              }
             } catch (error) {
               console.error('Error adding AI response to database:', error);
-            }
+            }*/
           } catch (error) {
             console.error('Error in AI streaming:', error);
             set({ isStreaming: false });

@@ -3,8 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0'
 import { OpenAI } from 'https://esm.sh/openai@4.20.0'
 
 // Initialize Supabase client
-const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+const supabaseUrl = Deno.env.get('URL') ?? ''
+const supabaseServiceKey = Deno.env.get('SERVICE_ROLE_KEY') ?? ''
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 // Initialize OpenAI
@@ -83,27 +83,19 @@ serve(async (req) => {
         
         // Save the complete assistant response to Supabase
         try {
-          const { error: messageError } = await supabase
-            .from('messages')
-            .insert({
-              chat_id: chatId,  // chat_id is UUID
-              content: responseText,
-              is_user: false
-            })
+          // Use the RPC function to add the message
+          const { error: messageError } = await supabase.rpc('add_message_to_chat', {
+            p_chat_id: chatId,
+            p_user_id: userId,
+            p_content: responseText,
+            p_is_user: false
+          });
           
           if (messageError) {
             console.error('Error saving assistant message:', messageError)
           }
           
-          // Update the chat's updated_at timestamp
-          const { error: chatError } = await supabase
-            .from('chats')
-            .update({ updated_at: new Date() })
-            .eq('id', chatId)
-          
-          if (chatError) {
-            console.error('Error updating chat timestamp:', chatError)
-          }
+          // No need to manually update the chat timestamp as the RPC function does this
         } catch (error) {
           console.error('Error saving assistant response:', error)
         }

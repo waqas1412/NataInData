@@ -1,27 +1,220 @@
-# NataInData - AI-Powered Chat Application
+<div align="center">
 
-NataInData is a modern, AI-powered chat application built with Next.js, React, and Supabase. It provides an intuitive interface for users to interact with an AI Data Tutor, with real-time message synchronization across devices.
+# NataInData
 
-## Features
+<img src="public/logo.png" alt="NataInData Logo" width="140" height="140">
 
-- **AI-Powered Conversations**: Engage with a sophisticated AI Data Tutor
-- **Real-time Synchronization**: Messages sync instantly across all devices
-- **User Authentication**: Secure login and registration system
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Dark/Light Mode**: Switch between themes for comfortable viewing
-- **Chat History**: Access and manage previous conversations
-- **Subscription Model**: Premium features for subscribed users
-- **Code Highlighting**: Proper formatting for code snippets in chat
+### AI-powered conversational data tutor
 
-## Technology Stack
+[![Next.js](https://img.shields.io/badge/Next.js-15.x-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-3.x-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-2.x-3ECF8E?style=flat-square&logo=supabase)](https://supabase.io/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL database, Auth, Storage, Edge Functions)
-- **State Management**: Zustand
-- **AI Integration**: OpenAI API
-- **Deployment**: Vercel (frontend), Supabase (backend)
+<a href="#features">Features</a> •
+<a href="#demo">Demo</a> •
+<a href="#tech-stack">Tech Stack</a> •
+<a href="#getting-started">Getting Started</a> •
+<a href="#deployment">Deployment</a> •
+<a href="#contributing">Contributing</a>
 
-## Project Structure
+</div>
+
+<br />
+
+## ✨ Features
+
+<table>
+  <tr>
+    <td>
+      <h3>🤖 AI-Powered Tutor</h3>
+      <p>Engage with a sophisticated AI assistant specialized in data science</p>
+    </td>
+    <td>
+      <h3>⚡ Real-time Messaging</h3>
+      <p>Instant message delivery and synchronization across devices</p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>🔐 Secure Auth</h3>
+      <p>Authentication powered by Supabase with secure user management</p>
+    </td>
+    <td>
+      <h3>💳 Subscription System</h3>
+      <p>Premium features with Stripe payment integration</p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>🌓 Dark/Light Mode</h3>
+      <p>Theme switching for comfortable viewing in any environment</p>
+    </td>
+    <td>
+      <h3>📱 Responsive Design</h3>
+      <p>Optimized experience on desktop and mobile devices</p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>📊 Code Highlighting</h3>
+      <p>Proper syntax highlighting for code snippets in conversations</p>
+    </td>
+    <td>
+      <h3>🔊 Voice Input</h3>
+      <p>Audio processing with waveform visualization</p>
+    </td>
+  </tr>
+</table>
+
+<br />
+
+## 🎮 Demo
+
+<div align="center">
+  <p><strong>Experience NataInData in action</strong></p>
+  
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;">
+    <img src="public/screenshot1.png" alt="NataInData Interface" width="45%" />
+    <img src="public/screenshot2.png" alt="Chat with AI" width="45%" />
+  </div>
+  
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;">
+    <img src="public/screenshot3.png" alt="Code Highlighting" width="45%" />
+    <img src="public/screenshot4.png" alt="Dark Mode" width="45%" />
+  </div>
+  
+  <br />
+  
+  <a href="https://nata-in-data.vercel.app/new-chat">
+    <img src="https://img.shields.io/badge/LIVE_DEMO-Visit_Site-FF5757?style=for-the-badge" alt="Live Demo" />
+  </a>
+</div>
+
+<br />
+
+## 🛠️ Tech Stack
+
+<details open>
+<summary><b>Frontend</b></summary>
+<br>
+
+- **Framework**: [Next.js 15](https://nextjs.org/) - React framework with App Router
+- **UI Library**: [React 19](https://react.dev/) - Latest React with hooks
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand) - Simple state management
+- **Animations**: [Framer Motion](https://www.framer.com/motion/) - Production-ready animations
+- **Code Highlighting**: [React Syntax Highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter)
+- **Theme Switching**: [next-themes](https://github.com/pacocoursey/next-themes) - Theme management
+
+</details>
+
+<details>
+<summary><b>Backend</b></summary>
+<br>
+
+- **Database & Auth**: [Supabase](https://supabase.io/) - Open source Firebase alternative
+- **AI Integration**: [OpenAI](https://openai.com/) - Advanced language models
+- **Real-time**: Supabase Realtime - For instant updates
+- **Payments**: [Stripe](https://stripe.com/) - Subscription system
+
+</details>
+
+<details>
+<summary><b>DevOps & Tools</b></summary>
+<br>
+
+- **Language**: [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
+- **Linting**: [ESLint](https://eslint.org/) - Code quality tool
+- **Git Hooks**: [Husky](https://typicode.github.io/husky/) - Git hooks made easy
+- **Deployment**: [Vercel](https://vercel.com/) - Frontend deployment
+
+</details>
+
+<br />
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm/yarn
+- Supabase account
+- OpenAI API key
+- Stripe account (for subscription features)
+
+### Installation
+
+<details>
+<summary><b>1. Clone the repository</b></summary>
+
+```bash
+git clone https://github.com/your-username/NataInData.git
+cd NataInData
+```
+</details>
+
+<details>
+<summary><b>2. Install dependencies</b></summary>
+
+```bash
+npm install
+```
+</details>
+
+<details>
+<summary><b>3. Set up environment variables</b></summary>
+
+Copy `.env.local.example` to `.env.local` and fill in the required values:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Required environment variables:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+OPENAI_API_KEY=your_openai_api_key
+NEXT_PUBLIC_STRIPE_PAYMENT_LINK=your_stripe_payment_link
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+```
+</details>
+
+<details>
+<summary><b>4. Run the development server</b></summary>
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the application.
+</details>
+
+<details>
+<summary><b>5. Supabase Setup</b></summary>
+
+1. Create a new Supabase project
+2. Set up tables for chats, messages, and subscriptions
+3. Configure Row Level Security (RLS) policies
+4. Deploy Supabase Edge Functions:
+   ```bash
+   supabase functions deploy
+   ```
+</details>
+
+<details>
+<summary><b>6. Stripe Integration</b></summary>
+
+Follow the instructions in the `STRIPE_INTEGRATION.md` file to set up the subscription system.
+</details>
+
+<br />
+
+## 📁 Project Structure
 
 ```
 ├── app/                 # Next.js app router pages and API routes
@@ -29,104 +222,71 @@ NataInData is a modern, AI-powered chat application built with Next.js, React, a
 │   ├── chatComponents/  # Chat-related components
 │   ├── header/          # Header components
 │   ├── modals/          # Modal components
-│   ├── providers/       # Component-level providers
-│   └── ui/              # Generic UI components
-├── constants/           # Static data and constants
+│   ├── ui/              # Reusable UI components
 ├── hooks/               # Custom React hooks
-├── lib/                 # Utility functions and API integrations
-├── providers/           # App-level context providers
+├── lib/                 # Utility functions and API clients
+│   ├── supabase.ts      # Supabase client
+│   ├── openai.ts        # OpenAI client
+├── providers/           # React context providers
+├── public/              # Static assets
 ├── stores/              # Zustand state stores
-└── supabase/            # Supabase edge functions and migrations
+├── supabase/            # Supabase edge functions and config
+├── types/               # TypeScript type definitions
 ```
 
-## Getting Started
+<br />
 
-### Prerequisites
+## 🌐 Deployment
 
-- Node.js 18+ and npm/yarn
-- Supabase account
-- OpenAI API key
+<details>
+<summary><b>Frontend (Vercel)</b></summary>
 
-### Installation
+```bash
+vercel
+```
+</details>
 
-1. Clone the repository:
+<details>
+<summary><b>Backend (Supabase)</b></summary>
+
+1. Deploy schema changes to your Supabase project
+2. Deploy Edge Functions:
+   ```bash
+   supabase functions deploy
    ```
-   git clone https://github.com/yourusername/NataInData.git
-   cd NataInData
+</details>
+
+<br />
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch:
+   ```bash
+   git checkout -b feature/amazing-feature
    ```
-
-2. Install dependencies:
+3. Commit your changes:
+   ```bash
+   git commit -m 'Add some amazing feature'
    ```
-   npm install
+4. Push to the branch:
+   ```bash
+   git push origin feature/amazing-feature
    ```
+5. Open a Pull Request
 
-3. Set up environment variables:
-   Create a `.env.local` file in the root directory with the following variables:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-   OPENAI_API_KEY=your_openai_api_key
-   ENABLE_SUPABASE_STORAGE=true
-   ```
+<br />
 
-4. Run the development server:
-   ```
-   npm run dev
-   ```
-
-5. Open [http://localhost:3000](http://localhost:3000) to view the application.
-
-### Supabase Setup
-
-1. Create tables for chats and messages in your Supabase database
-2. Set up Row Level Security policies
-3. Deploy Edge Functions for chat processing:
-   ```
-   npx supabase functions deploy chat
-   ```
-
-## Architecture Overview
-
-### Frontend
-
-The application uses Next.js App Router for routing and React components for the UI. Zustand is used for state management, providing a simple and efficient way to handle application state.
-
-### Backend
-
-Supabase provides the backend infrastructure:
-- PostgreSQL database for storing chats and messages
-- Authentication for user management
-- Realtime subscriptions for instant updates
-- Edge Functions for serverless processing
-
-### Chat Flow
-
-1. User sends a message
-2. Message is stored in Supabase database
-3. Message is processed by OpenAI API
-4. Response is streamed back to the user
-5. Response is stored in Supabase database
-6. Realtime subscriptions ensure all connected clients see updates instantly
-
-## Development
-
-### Code Style
-
-The project uses ESLint and TypeScript for code quality. A pre-commit hook runs linting before each commit.
-
-### Deployment
-
-- Frontend is deployed on Vercel
-- Supabase Edge Functions are deployed directly to Supabase
-
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgements
+<br />
 
-- [OpenAI](https://openai.com/) for the AI capabilities
-- [Supabase](https://supabase.io/) for the backend infrastructure
-- [Next.js](https://nextjs.org/) for the React framework
-- [Tailwind CSS](https://tailwindcss.com/) for styling
+<div align="center">
+  <img src="public/logo-small.png" alt="NataInData" width="40">
+  <br />
+  Made with ❤️ by Me
+</div>

@@ -6,6 +6,7 @@ import BotReply from "@/components/chatComponents/BotReply";
 import ChatBox from "@/components/ChatBox";
 import { useAuthStore } from "@/stores/authStore";
 import { findOrCreateRoadmapChat } from "@/lib/supabase-helpers";
+import LessonPanel from "@/components/roadmap/LessonPanel";
 
 // Simple circular loader component
 const CircularLoader = () => (
@@ -166,79 +167,82 @@ export default function RoadmapPage() {
   }, [chatList, roadmapChatId, displayedMessages]);
 
   return (
-    <div className="bg-white h-[calc(100vh-60px)] dark:bg-[#1A1915] flex flex-col relative w-full">
-      <div className="py-6 px-4 border-b border-gray-200 dark:border-gray-800">
-        <h1 className="text-2xl font-semibold">Roadmap</h1>
-        <p className="text-gray-600 dark:text-gray-400">Your personalized learning journey</p>
+    <div className="bg-white dark:bg-[#1A1915] h-[calc(100vh-60px)] flex flex-col md:flex-row relative w-full">
+      {/* Left side: Lesson content */}
+      <div className="w-full md:w-3/5 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 h-1/2 md:h-full overflow-hidden">
+        <LessonPanel />
       </div>
       
-      <div
-        ref={scrollBoxRef}
-        className="flex-1 w-full pb-44 lg:pb-44 overflow-auto"
-      >
-        {loading ? (
-          <div className="flex items-center w-full justify-center pt-10">
-            <CircularLoader />
-          </div>
-        ) : !user ? (
-          <div className="flex flex-col gap-6 p-4">
-            <div className="text-center py-8">
-              <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300">
-                Please sign in to access your roadmap chat
-              </h2>
-              <p className="mt-2 text-gray-500 dark:text-gray-400">
-                Your roadmap chat will help you plan and track your learning journey
-              </p>
+      {/* Right side: Chat */}
+      <div className="w-full md:w-2/5 h-1/2 md:h-full flex flex-col">
+        <div
+          ref={scrollBoxRef}
+          className="flex-1 w-full pb-44 lg:pb-44 overflow-auto"
+        >
+          {loading ? (
+            <div className="flex items-center w-full justify-center pt-10">
+              <CircularLoader />
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6 px-4 md:px-6 mx-auto max-w-[1070px] w-full">
-            {/* Display welcome message if no messages yet */}
-            {displayedMessages.length === 0 && (
-              <BotReply
-                replyType="Welcome to your Roadmap Chat! This is a dedicated space for planning your learning journey. The chat will be persistent across sessions so you can always come back to it."
-                setScroll={setScroll}
-                isAnimation={false}
-              />
-            )}
-            
-            {/* Display messages */}
-            {displayedMessages.map((item, index) => (
-              <div key={`${item.timestamp}-${index}`} className="message-item">
-                {item.isUser ? (
-                  <MyReply 
-                    replyText={typeof item.text === "string" ? item.text : JSON.stringify(item.text)} 
-                    replyTime={new Date(item.timestamp).toLocaleTimeString()}
-                  />
-                ) : (
-                  <BotReply
-                    replyType={typeof item.text === "string" ? item.text : ""}
-                    setScroll={setScroll}
-                    isAnimation={false}
-                    replyTime={new Date(item.timestamp).toLocaleTimeString()}
-                  />
-                )}
+          ) : !user ? (
+            <div className="flex flex-col gap-6 p-4">
+              <div className="text-center py-8">
+                <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300">
+                  Please sign in to access your roadmap chat
+                </h2>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">
+                  Your roadmap chat will help you plan and track your learning journey
+                </p>
               </div>
-            ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6 px-4 mx-auto w-full pt-4">
+              {/* Display welcome message if no messages yet */}
+              {displayedMessages.length === 0 && (
+                <BotReply
+                  replyType="Welcome to your Roadmap chat! Ask me anything about your data engineering journey or the current lesson."
+                  setScroll={setScroll}
+                  isAnimation={false}
+                />
+              )}
+              
+              {/* Display messages */}
+              {displayedMessages.map((item, index) => (
+                <div key={`${item.timestamp}-${index}`} className="message-item">
+                  {item.isUser ? (
+                    <MyReply 
+                      replyText={typeof item.text === "string" ? item.text : JSON.stringify(item.text)} 
+                      replyTime={new Date(item.timestamp).toLocaleTimeString()}
+                    />
+                  ) : (
+                    <BotReply
+                      replyType={typeof item.text === "string" ? item.text : ""}
+                      setScroll={setScroll}
+                      isAnimation={false}
+                      replyTime={new Date(item.timestamp).toLocaleTimeString()}
+                    />
+                  )}
+                </div>
+              ))}
 
-            {/* Show streaming response with typing animation */}
-            {isStreaming && streamingMessage && (
-              <BotReply
-                replyType={streamingMessage}
-                setScroll={setScroll}
-                isStreaming={true}
-                isAnimation={true}
-              />
-            )}
+              {/* Show streaming response with typing animation */}
+              {isStreaming && streamingMessage && (
+                <BotReply
+                  replyType={streamingMessage}
+                  setScroll={setScroll}
+                  isStreaming={true}
+                  isAnimation={true}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {user && (
+          <div className="absolute w-full md:w-2/5 bottom-0 z-30 bg-white dark:bg-[#1A1915] shadow-lg pb-5">
+            <ChatBox />
           </div>
         )}
       </div>
-
-      {user && (
-        <div className="absolute w-full bottom-0 z-30 bg-white dark:bg-[#1A1915] shadow-lg pb-5">
-          <ChatBox />
-        </div>
-      )}
     </div>
   );
 } 
