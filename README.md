@@ -88,7 +88,7 @@
   
   <br />
   
-  <a href="https://nataindata.com">
+  <a href="https://nata-in-data.vercel.app/new-chat">
     <img src="https://img.shields.io/badge/LIVE_DEMO-Visit_Site-FF5757?style=for-the-badge" alt="Live Demo" />
   </a>
 </div>
