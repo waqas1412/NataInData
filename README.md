@@ -74,17 +74,9 @@
 ## 🎮 Demo
 
 <div align="center">
-  <p><strong>Experience NataInData in action</strong></p>
+  <p><strong>See NataInData in action</strong></p>
   
-  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;">
-    <img src="public/screenshot1.png" alt="NataInData Interface" width="45%" />
-    <img src="public/screenshot2.png" alt="Chat with AI" width="45%" />
-  </div>
-  
-  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;">
-    <img src="public/screenshot3.png" alt="Code Highlighting" width="45%" />
-    <img src="public/screenshot4.png" alt="Dark Mode" width="45%" />
-  </div>
+  <img src="public/demo.gif" alt="NataInData Demo" width="85%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
   
   <br />
   
